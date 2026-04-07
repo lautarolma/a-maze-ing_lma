@@ -49,9 +49,13 @@ El programa se inicia ejecutando python3 a_maze_ing.py config.txt
 
 - El laberinto debe tener la opción de ser perfecto. Ya se supone que lo es, asi que hay que ver como hacemos que sea imperfecto tambien.
 - Falta el script validator, debería verificar que entry_xy y exit_exy esté dentro del rango de width y height y que no esté dentro del patron 42.
-- Falta que, si el laberinto es muy pequeño para mostrar el patron 42, salga un mensaje, no tengo claro si tiene que mostrarse el laberinto o no.
+- Falta que, si el laberinto es muy pequeño para mostrar el patron 42, salga un mensaje, debe salir el laberinto sin patron.
 - Del parseo falta toda la parte de la interfaz de usuario. El laberinto debería mostrar un menú que permita: mostrar y ocultar la solución, cambiar el laberinto de color, generar un nuevo laberinto y salir.
 - En el script de maze_generator.py está la función de crear el archivo maze.txt, no debería estar ahí.
-- Todo lo que tenga que ver con la norma, flake8, docstrings, y probablemente hints también.
 
 Y seguramente muchas cosas más, pero eso es lo principal por ahora.
+
+==== Tareas de revisión ====
+
+- Todo lo que tenga que ver con la norma, mypy , flake8, docstrings, y probablemente hints también.
+- docstring y documentación, ingles

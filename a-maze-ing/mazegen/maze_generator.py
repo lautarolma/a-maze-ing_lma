@@ -1,4 +1,4 @@
-from config.parser import parse_config, ConfigFormat
+from config.parser import parse_config, ConfigFormat, MazeConfigError
 import random
 from collections import deque
 from typing import Optional, Tuple, List, Dict
@@ -6,7 +6,7 @@ from typing import Optional, Tuple, List, Dict
 
 # class Cell and methods
 class Cell:
-    def __init__(self, x, y):
+    def __init__(self, x: int, y: int):
         self.x = x
         self.y = y
         self.parent = self
@@ -27,6 +27,7 @@ class Cell:
         """
         root1 = self.find()
         root2 = other.find()
+        # Esto evita un ciclo.
         if root1 != root2:
             root2.parent = root1
 
@@ -121,7 +122,7 @@ class Maze:
                     c1.union(c2)
 
     # Solve Maze using BFS
-    def solve(self) -> List[str]:
+    def solve(self) -> List[Tuple[Cell, str]]:
         explored: deque[Tuple[int, int]] = deque([self.entry_xy])
         origin: Dict[Tuple[int, int], Optional
                      [Tuple[Tuple[int, int], str]]] = {self.entry_xy: None}
@@ -140,15 +141,18 @@ class Maze:
                     explored.append((nx, ny)) # save in explored cells
 
         if self.exit_xy not in origin:
-            return []
+            raise MazeConfigError("Exit not found")
 
-        path: List[str] = []
+        solve_list: List[Tuple[Cell, str]] = []
         pos = self.exit_xy
         while origin[pos] is not None:
             info = origin[pos]
-            path.append(info[1])
             pos = info[0]
-        return path[::-1]  # de entrada a salida
+            add = pos, info[1]
+            solve_list.append(add)
+
+        solve_list.reverse()
+        return solve_list
     
     def hex_maze(self) -> List[str]:
         """
@@ -180,6 +184,7 @@ class Maze:
         """
         file = "maze.txt"
         solution = self.solve()
+        direction_list = [d for _, d in solution]
         hex_maze = self.hex_maze()
         maze_entry = ",".join(str(i) for i in self.entry_xy)
         maze_exit = ",".join(str(e) for e in self.exit_xy)
@@ -194,8 +199,8 @@ class Maze:
                 f.write("\n")
                 f.write(maze_exit)
                 f.write("\n")
-                for D in solution:
-                    f.write(D)
+                for d in direction_list:
+                    f.write(d)
         except OSError as e:
             print(f"Caught an error generating 'maze.txt' file: {e}")
     

@@ -24,11 +24,11 @@ COLOR_PALETTE = [
 
 # print maze
 def print_maze_st(maze, pattern_42: set):
-    bg = COLOR_PALETTE[0][0]
-    ft = COLOR_PALETTE[0][3]
-    font = COLOR_PALETTE[0][2]
-    path = COLOR_PALETTE[0][1]
-    ec = COLOR_PALETTE[0][4]
+    bg = COLOR_PALETTE[4][0]
+    ft = COLOR_PALETTE[4][3]
+    font = COLOR_PALETTE[4][2]
+    path = COLOR_PALETTE[4][1]
+    ec = COLOR_PALETTE[4][4]
 
     r_style = bg + font
 
