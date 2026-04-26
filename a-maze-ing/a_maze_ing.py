@@ -1,24 +1,42 @@
 #!/usr/bin/env python3
 import sys
-from config import parse_config, MazeConfigError
-from ui import display
+from config import parse_config, maze_validator, MazeConfigError, check_42_pattern
+from ui import display, DisplayMazeError
 from mazegen import Maze
 
 def a_maze_ing() -> None:
     """
-    
     """
+    config = None
     if len(sys.argv) == 2:
         try:
             file = sys.argv[1]
-            a_maze_ing = Maze(parse_config(file))
-            a_maze_ing._generate_maze()
-            pattern = a_maze_ing._block_42_pattern()
+            config = parse_config(file)
+        except MazeConfigError as e:
+            print(f"Configuration failed: {e}")
+            return
+        
+        if config:
+            try:
+                maze_validator(config)
+                a_maze_ing = Maze(config)
+                a_maze_ing._generate_maze()
+                if check_42_pattern(config):
+                    pattern = a_maze_ing.block_42_pattern(config["width"],
+                                                          config["height"])
+                else:
+                    pattern = None
+            except MazeConfigError as e:
+                print(f"Validation failed: {e}")
+                return
+
+        try:
             display(a_maze_ing, pattern)
             a_maze_ing.save_to_file()
-        except MazeConfigError as e:
-            print(f"Caught an error: {e}")
+        except DisplayMazeError as e:
+            print(f"DisplayError occurred: {e}")
     else:
         print("No arguments recieved")
+
 
 a_maze_ing()

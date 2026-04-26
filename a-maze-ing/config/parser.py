@@ -9,18 +9,25 @@ MANDATORY_KEYS: Set[str] = {
         "ENTRY",
         "EXIT",
         "OUTPUT_FILE",
-        "PERFECT"
     }
 
 OPTIONAL_KEYS: Set[str] = {
-        "SEED"
+        "SEED",
+        "PERFECT"
     }
 
 ALLOWED_KEYS: Set[str] = MANDATORY_KEYS | OPTIONAL_KEYS
 
+
 class MazeConfigError(Exception):
     """"""
     pass
+
+
+class ImposibleMazeError(MazeConfigError):
+    """"""
+    pass
+
 
 class ConfigFormat(TypedDict):
     """Define dictionary that follows the format"""
@@ -32,13 +39,20 @@ class ConfigFormat(TypedDict):
     perfect: bool
     seed: Optional[int]
 
+
 def parse_coord(value: str) -> Tuple[int, int]:
     """Convert exit/entry coordinates into tuples"""
     coor = value.split(',')
     if len(coor) != 2:
         raise ValueError("Invalid format for entry/exit "
                          "(Expected x,y)")
-    return (int(coor[0]), int(coor[1]))
+    try:
+        x = int(coor[0])
+        y = int(coor[1])
+        return (x, y)
+    except ValueError:
+        raise MazeConfigError(f"Invalid coordinate value: '{value}' "
+                              "(Expected x,y with integers)") from None
             
 
 def parse_config(config_file_path: str) -> ConfigFormat:
@@ -80,7 +94,7 @@ def parse_config(config_file_path: str) -> ConfigFormat:
                 temp[key] = value
             # allowed and missing keys check
             all_keys = temp.keys()
-            not_allowed = [k for k in all_keys - ALLOWED_KEYS]
+            not_allowed = [k for k in ALLOWED_KEYS - all_keys]
             missing_key = [k for k in MANDATORY_KEYS - all_keys]
             if not_allowed:
                 raise MazeConfigError("Unknown key(s) in "
@@ -107,8 +121,11 @@ def parse_config(config_file_path: str) -> ConfigFormat:
                                       'integers greater than 0. Entered '
                                       f'W: {w} and H: {h}')
             # ENTRY AND EXIT
-            entry_xy = parse_coord(temp["ENTRY"])
-            exit_xy = parse_coord(temp["EXIT"])
+            try:
+                entry_xy = parse_coord(temp["ENTRY"])
+                exit_xy = parse_coord(temp["EXIT"])
+            except ValueError as e:
+                raise MazeConfigError(f"Invalid coordinate value: {e}")
             # PERFECT MAZE
             perfect_str = temp["PERFECT"].lower()
             if perfect_str not in ("true", "false"):
@@ -127,8 +144,8 @@ def parse_config(config_file_path: str) -> ConfigFormat:
                     "perfect": perfect,
                     "seed": seed
                     }
-        except (ValueError, MazeConfigError) as e:
-            print(f"Configuration failed: {e}")
+        except (MazeConfigError) as e:
+            print(e)
         
 diccionario = parse_config("config.txt")
 print("aqui está el diccionario: ", diccionario)

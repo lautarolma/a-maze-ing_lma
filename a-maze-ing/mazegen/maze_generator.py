@@ -1,7 +1,7 @@
-from config.parser import parse_config, ConfigFormat, MazeConfigError
+from config import MazeConfigError, ConfigFormat
 import random
 from collections import deque
-from typing import Optional, Tuple, List, Dict
+from typing import Optional, Tuple, List, Dict, Set
 
 
 # class Cell and methods
@@ -27,7 +27,7 @@ class Cell:
         """
         root1 = self.find()
         root2 = other.find()
-        # Esto evita un ciclo.
+        # This avoids cycles
         if root1 != root2:
             root2.parent = root1
 
@@ -48,7 +48,8 @@ class Maze:
         self.grid = [[Cell(x, y) for y in range(self.height)]
                      for x in range(self.width)]
         
-    def _block_42_pattern(self):
+    @staticmethod
+    def block_42_pattern(width: int, height: int) -> Set[Tuple[int, int]]:
         """
         blocks 42 pattern cells
         """
@@ -59,15 +60,16 @@ class Maze:
             [0, 0, 1, 0, 1, 0, 0],
             [0, 0, 1, 0, 1, 1, 1]
         ]
-        ox = (self.width - 7) // 2
-        oy = (self.height - 5) // 2
+        ox = (width - 7) // 2
+        oy = (height - 5) // 2
         
         cells_to_block = set()
         for r in range(5):
             for c in range(7):
                 if pattern[r][c] == 1:
                     cells_to_block.add((ox + c, oy + r))
-        return cells_to_block                                                  
+        return cells_to_block
+                                                
 
     def _remove_wall(self, c1: Cell, c2: Cell):
         """
@@ -94,7 +96,7 @@ class Maze:
             c2.walls["S"] = False
 
     def _generate_maze(self):
-        pattern_42 = self._block_42_pattern()
+        pattern_42 = self.block_42_pattern(self.width, self.height)
         walls = []
         for x in range(self.width):
             for y in range(self.height):

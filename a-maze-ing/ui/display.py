@@ -1,7 +1,8 @@
+from __future__ import annotations
 import os
 from typing import Generator
 import time
-from mazegen import Maze, Cell
+from mazegen import Maze
 
 # Estilos
 COLOR_PALETTE = [
@@ -22,8 +23,14 @@ COLOR_PALETTE = [
     ["\033[48;5;55m", "\033[48;5;177m", "\033[38;5;177m", "\033[48;5;99m", "\033[0m"]
 ]
 
+
+class DisplayMazeError(Exception):
+    """"""
+    pass
+
+
 # print maze
-def print_maze_st(maze, pattern_42: set):
+def print_maze_st(maze: Maze, pattern_42: set | None):
     bg = COLOR_PALETTE[4][0]
     ft = COLOR_PALETTE[4][3]
     font = COLOR_PALETTE[4][2]
@@ -51,46 +58,46 @@ def print_maze_st(maze, pattern_42: set):
         for x in range(maze.width):
             cell = maze.grid[x][y]
 
-            # ===== CONTENIDO DE LA CELDA =====
+            # check if the cell is entry, exit, in 42 pattern or normal cell
             if (x, y) == maze.entry_xy or (x, y) == maze.exit_xy:
                 content = path + " * " + ec + r_style
-            elif (x, y) in pattern_42:
+            elif (pattern_42 and (x, y) in pattern_42):
                 content = ft + " * " + ec + r_style
             else:
                 content = "   "
 
-            # ===== PARED ESTE =====
+            # East wall
             east_wall = "|" if cell.walls["E"] else " "
 
-            # Construir línea de celdas
+            # build line of cells
             line_cells += content + east_wall
 
-            # ===== PARED SUR =====
+            # South wall
             if cell.walls["S"]:
                 line_bottom += "+---"
             else:
                 line_bottom += "+   "
 
-        # cerrar líneas
+        # Close the line of cells
         line_cells += ec
         line_bottom += "+" + ec
 
-        # imprimir ambas
+        # Print the two lines
         print(line_cells)
         print(line_bottom)
 
 
-def header_yield(file_path: str) ->Generator[dict, None, None]:
+def header_yield(file_path: str) -> Generator [dict, None, None]:
     """
     """
     with open(file_path) as f:
         for line in f:
-           for c in line:
+            for c in line:
                 yield c
 
 
 
-def display(maze, pattern_42: set) -> None:
+def display(maze: Maze, pattern_42: set | None) -> None:
     """
     """
     try:
