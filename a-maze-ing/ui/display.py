@@ -1,8 +1,10 @@
 from __future__ import annotations
 import os
+import random
 from typing import Generator
 import time
 from mazegen import Maze
+import shutil
 
 # Estilos
 COLOR_PALETTE = [
@@ -25,22 +27,52 @@ COLOR_PALETTE = [
 
 
 class DisplayMazeError(Exception):
-    """"""
+    """Exception raised for errors in the maze display process."""
     pass
 
 
 # print maze
-def print_maze_st(maze: Maze, pattern_42: set | None):
-    bg = COLOR_PALETTE[4][0]
-    ft = COLOR_PALETTE[4][3]
-    font = COLOR_PALETTE[4][2]
-    path = COLOR_PALETTE[4][1]
-    ec = COLOR_PALETTE[4][4]
+def print_maze(
+        maze: Maze,
+        pattern_42: set[tuple[int, int]],
+        solution_path: list[tuple[int, int]] | None = None,
+        animated_solution: bool = False,
+        theme_idx: int = 4,
+        random_color: bool = False
+        ) -> int:
+    """
+    Prints the maze to the terminal with optional
+    styling and solution path.
+     Args:
+        maze (Maze): The maze object to be printed.
+        pattern_42 (set[tuple[int, int]]):
+        Set of coordinates for the 42 pattern.
+        solution_path (list[tuple[int, int]], optional):
+        List of coordinates for the solution path. Defaults to None.
+        animated_solution (bool, optional):
+        Whether to animate the solution path. Defaults to False.
+        theme_idx (int, optional):
+        Index for the color theme. Defaults to 4.
+        random_color (bool, optional):
+        Whether to select a random color theme. Defaults to False.
+    """
+    if random_color:
+        theme_idx = random.randint(0, len(COLOR_PALETTE) - 1)
+
+    bg = COLOR_PALETTE[theme_idx][0]
+    ft = COLOR_PALETTE[theme_idx][3]
+    font = COLOR_PALETTE[theme_idx][2]
+    path = COLOR_PALETTE[theme_idx][1]
+    ec = COLOR_PALETTE[theme_idx][4]
 
     r_style = bg + font
 
-    # 🔹 Línea superior inicial
+    sol_set: set[tuple[int, int]] = (
+        set(solution_path) if solution_path else set[tuple[int, int]]()
+    )
+
     top_line = r_style
+
     for x in range(maze.width):
         top_line += "+---"
     top_line += "+" + ec
@@ -49,10 +81,10 @@ def print_maze_st(maze: Maze, pattern_42: set | None):
     # 🔹 Por cada fila del maze
     for y in range(maze.height):
 
-        # 👉 Línea de celdas (verticales)
+        # vertical cells
         line_cells = r_style + "|"
 
-        # 👉 Línea inferior (horizontales)
+        # bottom line of cells
         line_bottom = r_style
 
         for x in range(maze.width):
@@ -63,6 +95,9 @@ def print_maze_st(maze: Maze, pattern_42: set | None):
                 content = path + " * " + ec + r_style
             elif (pattern_42 and (x, y) in pattern_42):
                 content = ft + " * " + ec + r_style
+            elif (x, y) in sol_set and not animated_solution:
+                # render solution path
+                content = path + " • " + ec + r_style
             else:
                 content = "   "
 
@@ -87,18 +122,87 @@ def print_maze_st(maze: Maze, pattern_42: set | None):
         print(line_bottom)
 
 
-def header_yield(file_path: str) -> Generator [dict, None, None]:
+def header_yield(file_path: str) -> Generator[dict, None, None]:
     """
+    Reads a file and yields its content character by character with a delay.
     """
-    with open(file_path) as f:
+    with open(file_path, encoding='utf-8') as f:
         for line in f:
             for c in line:
                 yield c
 
 
-
-def display(maze: Maze, pattern_42: set | None) -> None:
+def animate_solution(maze, solution_path: list, theme_idx: int = 4) -> None:
     """
+    prints step by step the solution path with a delay between each step.
+    """
+    sol_color = COLOR_PALETTE[theme_idx][1] 
+    ec = COLOR_PALETTE[theme_idx][4]
+    
+    # Guarda la posicion actual del cursor
+    solution_coords = [coords for coords, _ in solution_path]
+    print("\033[s", end="")
+    for x, y in solution_coords:
+        # Reestablece el cursor al checkpoint
+        print("\033[u", end="")
+        
+        # Calcula el eje Y vertical y el eje X horizontal
+        lines_up = 2 * (maze.height - y)
+        cols_right = x * 4 + 2
+        
+        move_up = f"\033[{lines_up}A"
+        move_right = f"\033[{cols_right}C" if cols_right > 0 else ""
+        
+        # Mueve e imprime sin salto de linea y forzando el flush(necesario)
+        print(f"{move_up}{move_right}{sol_color}•{ec}", end="", flush=True)
+        time.sleep(0.05)
+        
+    # Devuelve el curror al punto de partida(posicion final de la impresion)
+    print("\033[u", end="")
+    print()
+
+
+def determine_display_mode(
+        maze_width: int,
+        maze_height: int
+        ) -> tuple[bool, bool]:
+    """
+    Evaluate terminal values to define forty-two patern
+    and animation-mode display
+    """
+    header_lines: int = 17
+    safety_margin: int = 3 
+    apply_ft_pattern: bool = maze_width >= 15 and maze_height >= 15
+
+    term_width, term_height = shutil.get_terminal_size(fallback=(80, 24))
+    animated_solution: bool = (maze_width + 1 <= term_width and
+                               maze_height + safety_margin <= term_height)
+
+    return apply_ft_pattern, animated_solution
+
+
+def display(
+        maze: Maze,
+        pattern_42: set[tuple[int, int]],
+        solution_path: list[tuple[int, int]] | None = None,
+        animated_solution: bool = False,
+        theme_idx: int = 4,
+        random_color: bool = False
+    ) -> None:
+    """
+    Handles the display of the maze and the solution animation if enabled.
+     Args:
+        maze (Maze): The maze object to be displayed.
+        pattern_42 (set[tuple[int, int]]):
+        Set of coordinates for the 42 pattern.
+        solution_path (list[tuple[int, int]], optional):
+        List of coordinates for the solution path. Defaults to None.
+        animated_solution (bool, optional):
+        Whether to animate the solution path. Defaults to False.
+        theme_idx (int, optional):
+        Index for the color theme. Defaults to 4.
+        random_color (bool, optional):
+        Whether to select a random color theme. Defaults to False.
     """
     try:
         base_dir = os.path.dirname(__file__)
@@ -111,4 +215,11 @@ def display(maze: Maze, pattern_42: set | None) -> None:
     except FileNotFoundError as e:
         print(f"Caught an error: {e}")
 
-    print_maze_st(maze, pattern_42)
+    print_maze(
+        maze,
+        pattern_42,
+        solution_path,
+        animated_solution,
+        theme_idx,
+        random_color
+        )

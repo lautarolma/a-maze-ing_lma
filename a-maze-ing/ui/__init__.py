@@ -1,3 +1,3 @@
-from .display import display, DisplayMazeError
+from .display import display, animate_solution, DisplayMazeError
 
-__all__ = ["display", "DisplayMazeError"]
+__all__ = ["display", "animate_solution", "DisplayMazeError"]

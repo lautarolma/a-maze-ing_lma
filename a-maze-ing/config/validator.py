@@ -1,25 +1,23 @@
 #!/usr/bin/env python3
-from .parser import MazeConfigError, ImposibleMazeError, ALLOWED_KEYS
+from .parser import MazeConfigError, ImposibleMazeError
+
 
 def maze_validator(config: dict) -> bool:
     """
+    Validates the maze configuration dictionary
+    against defined rules and constraints.
     """
-    # required_keys = set(ALLOWED_KEYS)
-    # if not required_keys.issubset(config.keys()):
-    #     missing = required_keys - config.keys()
-    #     raise MazeConfigError(f"Missing keys: {', '.join(missing)}")
-
     width = config["width"]
     height = config["height"]
     entry = config["entry"]
     exit = config["exit"]
 
-    if width > 50:
-        raise MazeConfigError(f"Width '{width}' exceeds the maximum "
-                              "allowed value of 50.")
-    if height > 50:
-        raise MazeConfigError(f"Height '{height}' exceeds the maximum "
-                              "allowed value of 50.")
+    if width > 50 or height > 50:
+        raise MazeConfigError(f"Width '{width if width > 50 else height}' "
+                              "exceeds the maximum allowed value of 50.")
+    if width < 5 or height < 5:
+        raise ImposibleMazeError(f"Width '{width if width < 5 else height}' "
+                                 "is below the minimum allowed value of 5.")
     if not (entry[0] >= 0 and entry[0] < width and entry[1] >= 0
             and entry[1] < height):
         raise MazeConfigError(f"Entry coordinates {entry} are out of bounds "
@@ -28,7 +26,6 @@ def maze_validator(config: dict) -> bool:
             and exit[1] < height):
         raise MazeConfigError(f"Exit coordinates {exit} are out of bounds "
                               f"for maze size {width}x{height}.")
-    
     # Check for optional keys
     if config["seed"] is not None and not isinstance(config["seed"], int):
         raise MazeConfigError("Seed must be an integer if provided.")
@@ -37,6 +34,7 @@ def maze_validator(config: dict) -> bool:
 
 def check_42_pattern(config: dict) -> bool:
     """
+    Checks if the '42' pattern can be applied to the maze.
     """
     from mazegen import block_42_pattern
     width = config["width"]

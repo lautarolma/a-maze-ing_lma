@@ -1,7 +1,6 @@
 from config import MazeConfigError, ConfigFormat
 import random
 from collections import deque
-from typing import Optional, Tuple, List, Dict, Set
 
 
 # class Cell and methods
@@ -44,12 +43,12 @@ class Maze:
         self.exit_xy: tuple[int, int] = data['exit']
         self.perfect: bool = data['perfect']
         self.out_file: str = data['output_file']
-        self.seed: Optional[int] = data.get('seed')
+        self.seed: int | None = data.get('seed')
         self.grid = [[Cell(x, y) for y in range(self.height)]
                      for x in range(self.width)]
         
     @staticmethod
-    def block_42_pattern(width: int, height: int) -> Set[Tuple[int, int]]:
+    def block_42_pattern(width: int, height: int) -> set[tuple[int, int]]:
         """
         blocks 42 pattern cells
         """
@@ -63,7 +62,7 @@ class Maze:
         ox = (width - 7) // 2
         oy = (height - 5) // 2
         
-        cells_to_block = set()
+        cells_to_block: set[tuple[int, int]] = set()
         for r in range(5):
             for c in range(7):
                 if pattern[r][c] == 1:
@@ -95,7 +94,7 @@ class Maze:
             c1.walls["N"] = False
             c2.walls["S"] = False
 
-    def _generate_maze(self):
+    def _generate_logic(self):
         pattern_42 = self.block_42_pattern(self.width, self.height)
         walls = []
         for x in range(self.width):
@@ -123,11 +122,16 @@ class Maze:
                     self._remove_wall(c1, c2)
                     c1.union(c2)
 
+    def generate(self):
+        """
+        generates the maze using randomized Kruskal's algorithm
+        """
+        self._generate_logic()
+
     # Solve Maze using BFS
-    def solve(self) -> List[Tuple[Cell, str]]:
-        explored: deque[Tuple[int, int]] = deque([self.entry_xy])
-        origin: Dict[Tuple[int, int], Optional
-                     [Tuple[Tuple[int, int], str]]] = {self.entry_xy: None}
+    def solve(self) -> list[tuple[Cell, str]]:
+        explored: deque[tuple[int, int]] = deque([self.entry_xy])
+        origin: dict[tuple[int, int], tuple[tuple[int, int], str] | None] = {self.entry_xy: None}
         while explored:
             cx, cy = explored.popleft()
             if (cx, cy) == self.exit_xy:
@@ -145,7 +149,7 @@ class Maze:
         if self.exit_xy not in origin:
             raise MazeConfigError("Exit not found")
 
-        solve_list: List[Tuple[Cell, str]] = []
+        solve_list: list[tuple[Cell, str]] = []
         pos = self.exit_xy
         while origin[pos] is not None:
             info = origin[pos]
@@ -156,7 +160,7 @@ class Maze:
         solve_list.reverse()
         return solve_list
     
-    def hex_maze(self) -> List[str]:
+    def hex_maze(self) -> list[str]:
         """
         return hex representation of maze
         """
