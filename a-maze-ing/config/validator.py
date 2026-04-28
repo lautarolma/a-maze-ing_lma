@@ -12,7 +12,7 @@ def maze_validator(config: dict) -> bool:
     entry = config["entry"]
     exit = config["exit"]
 
-    if width > 50 or height > 50:
+    if width > 60 or height > 60:
         raise MazeConfigError(f"Width '{width if width > 50 else height}' "
                               "exceeds the maximum allowed value of 50.")
     if width < 5 or height < 5:

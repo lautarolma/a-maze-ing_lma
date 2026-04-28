@@ -68,7 +68,6 @@ class Maze:
                 if pattern[r][c] == 1:
                     cells_to_block.add((ox + c, oy + r))
         return cells_to_block
-                                                
 
     def _remove_wall(self, c1: Cell, c2: Cell):
         """
@@ -127,6 +126,10 @@ class Maze:
         generates the maze using randomized Kruskal's algorithm
         """
         self._generate_logic()
+        # añadido para probar no_perfect
+        # if not self.perfect:
+            # romper pardes extra
+
 
     # Solve Maze using BFS
     def solve(self) -> list[tuple[Cell, str]]:
@@ -188,7 +191,7 @@ class Maze:
         """
         saves hex representation of maze and solution
         """
-        file = "maze.txt"
+        file = self.out_file
         solution = self.solve()
         direction_list = [d for _, d in solution]
         hex_maze = self.hex_maze()

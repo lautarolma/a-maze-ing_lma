@@ -36,7 +36,7 @@ def print_maze(
         maze: Maze,
         pattern_42: set[tuple[int, int]],
         solution_path: list[tuple[int, int]] | None = None,
-        animated_solution: bool = False,
+        maze_fits: bool = False,
         theme_idx: int = 4,
         random_color: bool = False
         ) -> int:
@@ -72,6 +72,7 @@ def print_maze(
     )
 
     top_line = r_style
+    solved_path = [coord for coord, _ in sol_set]
 
     for x in range(maze.width):
         top_line += "+---"
@@ -95,7 +96,7 @@ def print_maze(
                 content = path + " * " + ec + r_style
             elif (pattern_42 and (x, y) in pattern_42):
                 content = ft + " * " + ec + r_style
-            elif (x, y) in sol_set and not animated_solution:
+            elif (x, y) in solved_path and not maze_fits:
                 # render solution path
                 content = path + " • " + ec + r_style
             else:
@@ -132,7 +133,7 @@ def header_yield(file_path: str) -> Generator[dict, None, None]:
                 yield c
 
 
-def animate_solution(maze, solution_path: list, theme_idx: int = 4) -> None:
+def animation(maze, solution_path: list, theme_idx: int = 4) -> None:
     """
     prints step by step the solution path with a delay between each step.
     """
@@ -165,27 +166,26 @@ def animate_solution(maze, solution_path: list, theme_idx: int = 4) -> None:
 def determine_display_mode(
         maze_width: int,
         maze_height: int
-        ) -> tuple[bool, bool]:
+        ) -> bool:
     """
     Evaluate terminal values to define forty-two patern
     and animation-mode display
     """
     header_lines: int = 17
     safety_margin: int = 3 
-    apply_ft_pattern: bool = maze_width >= 15 and maze_height >= 15
 
     term_width, term_height = shutil.get_terminal_size(fallback=(80, 24))
     animated_solution: bool = (maze_width + 1 <= term_width and
-                               maze_height + safety_margin <= term_height)
+                               maze_height + safety_margin + header_lines <= term_height)
 
-    return apply_ft_pattern, animated_solution
+    return animated_solution
 
 
 def display(
         maze: Maze,
         pattern_42: set[tuple[int, int]],
         solution_path: list[tuple[int, int]] | None = None,
-        animated_solution: bool = False,
+        maze_fits: bool = False,
         theme_idx: int = 4,
         random_color: bool = False
     ) -> None:
@@ -210,7 +210,7 @@ def display(
 
         for c in header_yield(file_path):
             print(c, end="", flush=True)
-            time.sleep(0.005)
+            time.sleep(0.00005)
 
     except FileNotFoundError as e:
         print(f"Caught an error: {e}")
@@ -219,7 +219,7 @@ def display(
         maze,
         pattern_42,
         solution_path,
-        animated_solution,
+        maze_fits,
         theme_idx,
         random_color
         )
