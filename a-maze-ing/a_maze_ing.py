@@ -17,7 +17,7 @@ def main():
         run_visuals(maze, pattern, config)
 
     except MazeConfigError as e:
-        print(f"Configuration/Validation Error: {e}")
+        print(f"Configuration or Validation Error: {e}")
     except DisplayMazeError as e:
         print(f"UI Error: {e}")
     except Exception as e:
