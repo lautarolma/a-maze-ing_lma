@@ -11,16 +11,14 @@ COLOR_PALETTE = [
     # 0: bg,           1: path,          2: font,          3: p42,          4: ec
     # night
     ["\033[48;5;17m", "\033[48;5;229m", "\033[38;5;195m", "\033[48;5;51m", "\033[0m"],
-    # satoru
-    ["\033[48;5;255m", "\033[48;5;235m", "\033[38;5;146m", "\033[48;5;45m", "\033[0m"],
-    # eva01
-    ["\033[48;5;128m", "\033[48;5;54m", "\033[38;5;54m", "\033[48;5;76m", "\033[0m"],
-    # dark mode
-    ["\033[48;5;233m", "\033[48;5;236m", "\033[38;5;236m", "\033[48;5;220m", "\033[0m"],
-    # akatsuki
-    ["\033[48;5;233m", "\033[48;5;251m", "\033[38;5;251m", "\033[48;5;124m", "\033[0m"],
     # uzumaki
     ["\033[48;5;208m", "\033[48;5;220m", "\033[38;5;238m", "\033[48;5;238m", "\033[0m"],
+    # akatsuki
+    ["\033[48;5;233m", "\033[48;5;251m", "\033[38;5;251m", "\033[48;5;124m", "\033[0m"],
+    # dark mode
+    ["\033[48;5;233m", "\033[48;5;236m", "\033[38;5;236m", "\033[48;5;220m", "\033[0m"],
+    # eva01
+    ["\033[48;5;128m", "\033[48;5;54m", "\033[38;5;54m", "\033[48;5;76m", "\033[0m"],
     # ox
     ["\033[48;5;55m", "\033[48;5;177m", "\033[38;5;177m", "\033[48;5;99m", "\033[0m"]
 ]
@@ -178,17 +176,6 @@ def determine_display_mode(
     Evaluate terminal values to define forty-two patern
     and animation-mode display
     """
-<<<<<<< HEAD
-
-    header_lines = 17
-    safety_margin = 2
-    render_width = (maze_width * 4) + 1
-    render_height = (maze_height * 2) + 1
-
-    term_width, term_height = shutil.get_terminal_size(fallback=(80, 24))
-    animated_solution: bool = (render_width + safety_margin <= term_width and
-                               render_height + safety_margin + header_lines <= term_height)
-=======
     header_lines: int = 17
     safety_margin: int = 3 
     menu_lines: int = 3
@@ -200,7 +187,6 @@ def determine_display_mode(
         raise DisplayMazeError("Terminal size is too small to display the maze properly.")
     animated_solution: bool = (maze_width + 1 <= term_width and
                                maze_height + safety_margin + header_lines + menu_lines <= term_height)
->>>>>>> bf45fad (Raises error if maze doesn't fits in terminal)
 
     return animated_solution
 
@@ -239,6 +225,23 @@ def display_maze(
             # instant_solution,
             theme_idx,
             random_color
+        base_dir = os.path.dirname(__file__)
+        file_path = os.path.join(base_dir, "header.txt")
+
+        for c in header_yield(file_path):
+            print(c, end="", flush=True)
+            time.sleep(0.005)
+
+    except FileNotFoundError as e:
+        print(f"Caught an error: {e}")
+
+    print_maze(
+        maze,
+        pattern_42,
+        solution_path,
+        maze_fits,
+        theme_idx,
+        random_color
         )
     except DisplayMazeError as e:
         print(f"DisplayMazeError: {e}")
