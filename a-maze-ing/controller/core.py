@@ -1,8 +1,12 @@
 #!/usr/bin/python3
 
+import os
+import time
+import readchar
 from config import parse_config, maze_validator, check_42_pattern
-from ui import display, animation, determine_display_mode
+from ui import animation, determine_display_mode, print_maze, header_yield, menu_visuals
 from mazegen import Maze
+
 
 
 def setup_config(file_path: str) -> dict:
@@ -11,9 +15,10 @@ def setup_config(file_path: str) -> dict:
     maze_validator(config)
     return config
 
-#### revisar esta funcion lo qe devuelve no tiene logica
-def build_maze(config):
-    """Generates the maze and applies the '42' pattern if applicable."""
+#### revisar esta funcion lo qe devuelve no tiene logica // devuelve tupla, objeto maze + coor del patron 42
+def build_maze(config) -> tuple[Maze, list[tuple[int, int]] | None]:
+    """Generates the maze and applies the '42' pattern if applicable.
+    returns the maze object and the pattern cells if the pattern is applied."""
     maze = Maze(config)
     maze.generate()
 
@@ -26,24 +31,62 @@ def build_maze(config):
 
 def run_visuals(maze, pattern, config):
     """Handles the display of the maze and the solution animation if enabled."""
+
+    running = True
+
+    try:
+        base_dir = os.path.dirname(__file__)
+        file_path = os.path.join(base_dir, "header.txt")
+
+        for c in header_yield(file_path):
+            print(c, end="", flush=True)
+            time.sleep(0.00005)
+            print("\033[s", end="")
+
+    except FileNotFoundError as e:
+        print(f"Caught an error: {e}")
+
+    MARGIN = 20
+    show_solution = False
+
+    while running:
+        print(f"\033[{MARGIN};1H", end="")
+        print("\033[J", end="")
+
+        # si no cabe imprime con solucion
+        maze_fits = determine_display_mode(maze.width, maze.height)
+        
+        print_maze(
+            maze, 
+            pattern, 
+            maze.solve(),
+            maze_fits,
+            config["theme_idx"], 
+            config["random_color"]
+        )
+
+        # si cabe imprime primero maze y luego solucion animada
+        if maze_fits and show_solution:
+            animation(maze, maze.solve(), config["theme_idx"])
+
+        menu_visuals()
+
+        key = readchar.readkey()
+
+        if key == "q":
+            running = False
+
+        elif key == "r":
+            show_solution = False
+            maze, pattern = build_maze(config)
+
+        elif key == "s":
+            show_solution = not show_solution
+
+        elif key == "c":
+            config["theme_idx"] = (config["theme_idx"] + 1) % 5
+
+        maze.save_to_file()
     
-    sol_path = maze.solve()
-
-    # si no cabe imprime con solucion
-    maze_fits = determine_display_mode(maze.width, maze.height)
-
-    display(
-        maze, 
-        pattern, 
-        sol_path, 
-        maze_fits,
-        #config["instant_solution"], 
-        config["theme_idx"], 
-        config["random_color"]
-    )
-    
-    # si cabe imprime primero maze y luego solucion animada
-    if maze_fits:
-        animation(maze, sol_path, config["theme_idx"])
-
-    maze.save_to_file()
+    print("\033[H\033[J\033[3J", end="")
+    print("bye!")

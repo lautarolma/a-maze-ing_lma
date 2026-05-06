@@ -171,7 +171,7 @@ def parse_config(config_file_path: str) -> ConfigFormat:
 
     # UI SETTINGS (default values)
     theme_idx = int(temp.get("THEME_IDX", 4))
-    instant_solution = temp.get("INSTANT_SOLUTION", "true").lower() == "true"
+    #instant_solution = temp.get("INSTANT_SOLUTION", "false").lower() == "true"
     random_color = temp.get("RANDOM_COLOR", "false").lower() == "true"
 
     # Return ConfigFormat
@@ -184,7 +184,7 @@ def parse_config(config_file_path: str) -> ConfigFormat:
             "perfect": perfect,
             "seed": seed,
             "theme_idx": theme_idx,
-            "instant_solution": instant_solution,
+            #"instant_solution": instant_solution,
             "random_color": random_color
             }
 

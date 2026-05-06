@@ -37,9 +37,10 @@ def print_maze(
         pattern_42: set[tuple[int, int]],
         solution_path: list[tuple[int, int]] | None = None,
         maze_fits: bool = False,
+        #show_solution: bool = False,
         theme_idx: int = 4,
         random_color: bool = False
-        ) -> int:
+        ) -> None:
     """
     Prints the maze to the terminal with optional
     styling and solution path.
@@ -49,8 +50,8 @@ def print_maze(
         Set of coordinates for the 42 pattern.
         solution_path (list[tuple[int, int]], optional):
         List of coordinates for the solution path. Defaults to None.
-        animated_solution (bool, optional):
-        Whether to animate the solution path. Defaults to False.
+        show_solution (bool, optional):
+        Whether to display the solution path. Defaults to False.
         theme_idx (int, optional):
         Index for the color theme. Defaults to 4.
         random_color (bool, optional):
@@ -96,9 +97,10 @@ def print_maze(
                 content = path + " * " + ec + r_style
             elif (pattern_42 and (x, y) in pattern_42):
                 content = ft + " * " + ec + r_style
-            elif (x, y) in solved_path and not maze_fits:
-                # render solution path
-                content = path + " • " + ec + r_style
+            # mostrar solución instantaneamente ya no es necesario, debe activarse desde menú
+            # elif (x, y) in solved_path and not maze_fits and show_solution:
+            #     # render solution path
+            #     content = path + " • " + ec + r_style
             else:
                 content = "   "
 
@@ -158,9 +160,8 @@ def animation(maze, solution_path: list, theme_idx: int = 4) -> None:
         print(f"{move_up}{move_right}{sol_color}•{ec}", end="", flush=True)
         time.sleep(0.05)
         
-    # Devuelve el curror al punto de partida(posicion final de la impresion)
-    print("\033[u", end="")
-    print()
+    # Devuelve el cursor al punto de partida(posicion final de la impresion)
+    print("\033[u", end="", flush=True) # Regresa al Punto A y SE QUEDA AHÍ
 
 
 def determine_display_mode(
@@ -186,6 +187,7 @@ def display(
         pattern_42: set[tuple[int, int]],
         solution_path: list[tuple[int, int]] | None = None,
         maze_fits: bool = False,
+        instant_solution: bool = False,
         theme_idx: int = 4,
         random_color: bool = False
     ) -> None:
@@ -204,22 +206,17 @@ def display(
         random_color (bool, optional):
         Whether to select a random color theme. Defaults to False.
     """
-    try:
-        base_dir = os.path.dirname(__file__)
-        file_path = os.path.join(base_dir, "header.txt")
-
-        for c in header_yield(file_path):
-            print(c, end="", flush=True)
-            time.sleep(0.00005)
-
-    except FileNotFoundError as e:
-        print(f"Caught an error: {e}")
 
     print_maze(
         maze,
         pattern_42,
         solution_path,
         maze_fits,
+        instant_solution,
         theme_idx,
         random_color
         )
+    
+
+def menu_visuals()-> None:
+    print("\nPress 'q' to quit, 'r' to regenerate, 's' to toggle solution, 'c' to change color theme.")
