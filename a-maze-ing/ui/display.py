@@ -36,7 +36,7 @@ def print_maze(
         maze: Maze,
         pattern_42: set[tuple[int, int]],
         solution_path: list[tuple[int, int]] | None = None,
-        maze_fits: bool = False,
+        #maze_fits: bool = False,
         #show_solution: bool = False,
         theme_idx: int = 4,
         random_color: bool = False
@@ -178,6 +178,7 @@ def determine_display_mode(
     Evaluate terminal values to define forty-two patern
     and animation-mode display
     """
+<<<<<<< HEAD
 
     header_lines = 17
     safety_margin = 2
@@ -187,16 +188,29 @@ def determine_display_mode(
     term_width, term_height = shutil.get_terminal_size(fallback=(80, 24))
     animated_solution: bool = (render_width + safety_margin <= term_width and
                                render_height + safety_margin + header_lines <= term_height)
+=======
+    header_lines: int = 17
+    safety_margin: int = 3 
+    menu_lines: int = 3
+    needed_height = (maze_height * 2) + safety_margin + header_lines + menu_lines
+
+    term_width, term_height = shutil.get_terminal_size(fallback=(80, 24))
+    print(f"Terminal height: {term_height}, terminal width: {term_width}")
+    if term_height < needed_height or term_width < (maze_width * 4) + 1:
+        raise DisplayMazeError("Terminal size is too small to display the maze properly.")
+    animated_solution: bool = (maze_width + 1 <= term_width and
+                               maze_height + safety_margin + header_lines + menu_lines <= term_height)
+>>>>>>> bf45fad (Raises error if maze doesn't fits in terminal)
 
     return animated_solution
 
 
-def display(
+def display_maze(
         maze: Maze,
         pattern_42: set[tuple[int, int]],
         solution_path: list[tuple[int, int]] | None = None,
-        maze_fits: bool = False,
-        instant_solution: bool = False,
+        #maze_fits: bool = False,
+        #instant_solution: bool = False,
         theme_idx: int = 4,
         random_color: bool = False
     ) -> None:
@@ -215,16 +229,19 @@ def display(
         random_color (bool, optional):
         Whether to select a random color theme. Defaults to False.
     """
-
-    print_maze(
-        maze,
-        pattern_42,
-        solution_path,
-        maze_fits,
-        instant_solution,
-        theme_idx,
-        random_color
+    try:
+        determine_display_mode(maze.width, maze.height)
+        print_maze(
+            maze,
+            pattern_42,
+            solution_path,
+            # maze_fits,
+            # instant_solution,
+            theme_idx,
+            random_color
         )
+    except DisplayMazeError as e:
+        print(f"DisplayMazeError: {e}")
     
 
 def menu_visuals()-> None:
