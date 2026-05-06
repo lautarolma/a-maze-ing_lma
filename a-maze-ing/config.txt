@@ -1,7 +1,15 @@
+<<<<<<< HEAD
 WIDTH=25
 HEIGHT=25
 ENTRY=0,0
 EXIT=24,23
 OUTPUT_FILE=maze.txt
+=======
+WIDTH=15
+HEIGHT=15
+ENTRY=0,0
+EXIT=13,13
+OUTPUT_FILE="maze.txt"
+>>>>>>> 5bea455 (Revert "Fixed errors: Error message in width / height out of limits.")
 PERFECT=True
 SEED=
