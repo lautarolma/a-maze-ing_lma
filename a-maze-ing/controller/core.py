@@ -4,8 +4,9 @@ import os
 import time
 import readchar
 from config import parse_config, maze_validator, check_42_pattern
-from ui import animation, determine_display_mode, print_maze, header_yield, menu_visuals
+from ui import animation, determine_display_mode, header_yield, menu_visuals
 from mazegen import Maze
+from ui.display import display_maze
 
 
 
@@ -54,19 +55,23 @@ def run_visuals(maze, pattern, config):
         print("\033[J", end="")
 
         # si no cabe imprime con solucion
-        maze_fits = determine_display_mode(maze.width, maze.height)
-        
-        print_maze(
-            maze, 
-            pattern, 
-            maze.solve(),
-            maze_fits,
-            config["theme_idx"], 
-            config["random_color"]
-        )
+        #maze_fits = determine_display_mode(maze.width, maze.height)
+        try:
+            display_maze(
+                maze, 
+                pattern, 
+                maze.solve(),
+                #maze_fits,
+                config["theme_idx"], 
+                config["random_color"]
+            )
+        except Exception as e:
+            print(f"Error displaying maze: {e}")
+            running = False
+            
 
         # si cabe imprime primero maze y luego solucion animada
-        if maze_fits and show_solution:
+        if show_solution:
             animation(maze, maze.solve(), config["theme_idx"])
 
         menu_visuals()
