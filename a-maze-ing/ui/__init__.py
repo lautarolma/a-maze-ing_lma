@@ -1,3 +1,3 @@
-from .display import display, animation, determine_display_mode, DisplayMazeError
+from .display import display_maze, header_animation, animation, menu_visuals, DisplayMazeError
 
-__all__ = ["display", "animation", "determine_display_mode", "DisplayMazeError"]
+__all__ = ["display_maze", "header_animation", "animation", "menu_visuals", "DisplayMazeError"]

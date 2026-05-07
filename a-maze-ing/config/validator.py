@@ -13,10 +13,10 @@ def maze_validator(config: dict) -> bool:
     exit = config["exit"]
 
     if width > 60 or height > 60:
-        raise MazeConfigError(f"{'Width' if width > 60 else 'Height'} '{width if width > 60 else height}' "
-                              "exceeds the maximum allowed value of 60.")
+        raise MazeConfigError(f"Width '{width if width > 50 else height}' "
+                              "exceeds the maximum allowed value of 50.")
     if width < 5 or height < 5:
-        raise ImposibleMazeError(f"{'Width' if width < 5 else 'Height'} '{width if width < 5 else height}' "
+        raise ImposibleMazeError(f"Width '{width if width < 5 else height}' "
                                  "is below the minimum allowed value of 5.")
     if not (entry[0] >= 0 and entry[0] < width and entry[1] >= 0
             and entry[1] < height):
@@ -49,8 +49,12 @@ def check_42_pattern(config: dict) -> bool:
     if patttern_42:
         cells_to_block = block_42_pattern(width, height)
         if tuple(entry) in cells_to_block:
-            raise ImposibleMazeError("Entry point is blocked by the 42 pattern.")
+            raise ImposibleMazeError(
+                "Entry point is blocked by the 42 pattern."
+                )
         if tuple(exit) in cells_to_block:
-            raise ImposibleMazeError("Exit point is blocked by the 42 pattern.")
+            raise ImposibleMazeError(
+                "Exit point is blocked by the 42 pattern."
+                )
 
     return patttern_42

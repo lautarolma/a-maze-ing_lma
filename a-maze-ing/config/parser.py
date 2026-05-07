@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 from typing import TypedDict, Dict
 
 # sets of the autorized keys
@@ -86,7 +85,7 @@ def parse_config(config_file_path: str) -> ConfigFormat:
 
     except FileNotFoundError as e:
         raise MazeConfigError("Config file not found: "
-                        f"{config_file_path}: {e}")
+                              f"{config_file_path}: {e}")
 
     except PermissionError as e:
         raise MazeConfigError("Permission error trying to open: "
@@ -171,7 +170,6 @@ def parse_config(config_file_path: str) -> ConfigFormat:
 
     # UI SETTINGS (default values)
     theme_idx = int(temp.get("THEME_IDX", 4))
-    instant_solution = temp.get("INSTANT_SOLUTION", "true").lower() == "true"
     random_color = temp.get("RANDOM_COLOR", "false").lower() == "true"
 
     # Return ConfigFormat
@@ -184,17 +182,17 @@ def parse_config(config_file_path: str) -> ConfigFormat:
             "perfect": perfect,
             "seed": seed,
             "theme_idx": theme_idx,
-            "instant_solution": instant_solution,
+            # "instant_solution": instant_solution,
             "random_color": random_color
             }
 
 
-dict = parse_config("config.txt")
-if __name__ == "__main__":
-    import sys
-    try:
-        dict = parse_config("config.txt")
-        print("Lectura manual exitosa, aqui está el diccionario: ", dict)
-    except Exception as e:
-        print("Test fallido con error:"
-              f"\n{type(e).__name__}: {e}", file=sys.stderr)
+# dict = parse_config("config.txt")
+# if __name__ == "__main__":
+#     import sys
+#     try:
+#         dict = parse_config("config.txt")
+#         print("Lectura manual exitosa, aqui está el diccionario: ", dict)
+#     except Exception as e:
+#         print("Test fallido con error:"
+#               f"\n{type(e).__name__}: {e}", file=sys.stderr)
