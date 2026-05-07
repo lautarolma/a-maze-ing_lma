@@ -1,28 +1,31 @@
-#!/usr/bin/python3
-
-import os
-import time
 import readchar
 from config import parse_config, maze_validator, check_42_pattern
-from ui import animation, determine_display_mode, header_yield, menu_visuals
+from ui import animation, header_animation, menu_visuals, display_maze, DisplayMazeError
 from mazegen import Maze
-from ui.display import display_maze
-
 
 
 def setup_config(file_path: str) -> dict:
-    """initialize the configuration by parsing and validating the config file."""
+    """initialize the configuration by parsing and validating the config file.
+    Args:    file_path (str): The path to the configuration file.
+    Returns:    dict: The validated configuration dictionary."""
+
     config = parse_config(file_path)
     maze_validator(config)
+
     return config
 
-#### revisar esta funcion lo qe devuelve no tiene logica // devuelve tupla, objeto maze + coor del patron 42
+
 def build_maze(config) -> tuple[Maze, list[tuple[int, int]] | None]:
     """Generates the maze and applies the '42' pattern if applicable.
-    returns the maze object and the pattern cells if the pattern is applied."""
+    returns the maze object and the pattern cells if the pattern is applied.
+    Args:
+        config (dict): The configuration dictionary containing settings for the maze generation.
+    Returns:
+        tuple[Maze, list[tuple[int, int]] | None]: A tuple containing the generated maze object
+        and a list of coordinates for the '42' pattern cells, or None if the pattern is not applied."""
+    
     maze = Maze(config)
     maze.generate()
-
     pattern = None
     if check_42_pattern(config):
         pattern = maze.block_42_pattern(maze.width, maze.height)
@@ -30,22 +33,22 @@ def build_maze(config) -> tuple[Maze, list[tuple[int, int]] | None]:
     return maze, pattern
 
 
-def run_visuals(maze, pattern, config):
-    """Handles the display of the maze and the solution animation if enabled."""
+def run_visuals(maze, pattern, config) -> None:
+    """Handles the display of the maze and the user interaction loop for regenerating the maze,
+    toggling the solution animation, changing color themes, and quitting the program.
+     Args:
+        maze (Maze): The maze object to be displayed.
+        pattern (list[tuple[int, int]] | None): List of coordinates for the '42'
+            pattern cells, or None if the pattern is not applied.
+        config (dict): The configuration dictionary containing settings for the maze
+            generation and display.
+    raises:        DisplayMazeError: If there is an error during the display of the maze or the solution animation."""
 
     running = True
+    show_solution = False
+    MARGIN = 20
 
-    try:
-        base_dir = os.path.dirname(__file__)
-        file_path = os.path.join(base_dir, "header.txt")
-
-        for c in header_yield(file_path):
-            print(c, end="", flush=True)
-            time.sleep(0.00005)
-            print("\033[s", end="")
-
-    except FileNotFoundError as e:
-        print(f"Caught an error: {e}")
+    header_animation()
 
     MARGIN = 20
     show_solution = False
@@ -53,9 +56,7 @@ def run_visuals(maze, pattern, config):
     while running:
         print(f"\033[{MARGIN};1H", end="")
         print("\033[J", end="")
-
         # si no cabe imprime con solucion
-        #maze_fits = determine_display_mode(maze.width, maze.height)
         try:
             display_maze(
                 maze, 
@@ -65,16 +66,19 @@ def run_visuals(maze, pattern, config):
                 config["theme_idx"], 
                 config["random_color"]
             )
-        except Exception as e:
-            print(f"Error displaying maze: {e}")
-            running = False
+        except DisplayMazeError as e:
+            print(f"\nDisplayMazeError: {e}")
+            return
             
-
-        # si cabe imprime primero maze y luego solucion animada
         if show_solution:
-            animation(maze, maze.solve(), config["theme_idx"])
+            try:
+                animation(maze, maze.solve(), config["theme_idx"])
+            except DisplayMazeError as e:
+                print(f"\n\nDisplayMazeError: {e}")
+                print("bye!")
+                return
 
-        menu_visuals()
+        menu_visuals(config["theme_idx"])
 
         key = readchar.readkey()
 
@@ -90,6 +94,9 @@ def run_visuals(maze, pattern, config):
 
         elif key == "c":
             config["theme_idx"] = (config["theme_idx"] + 1) % 5
+
+        else:
+            print("\a", end="")
 
         maze.save_to_file()
     
