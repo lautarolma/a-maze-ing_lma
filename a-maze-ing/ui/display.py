@@ -264,8 +264,7 @@ def check_display_size(
         maze_height (int): The height of the maze.
     """
 
-    with open("header.txt", encoding='utf-8') as f:
-        header_lines = sum(1 for _ in f)
+    header_lines = 18
     safety_margin = 3
     menu_lines = 5
     render_width = (maze_width * 4) + 1
