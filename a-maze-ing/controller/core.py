@@ -70,7 +70,6 @@ def run_visuals(maze, pattern, config) -> None:
     while running:
         print(f"\033[{MARGIN};1H", end="")
         print("\033[J", end="")
-        # si no cabe imprime con solucion
         try:
             display_maze(
                 maze,
