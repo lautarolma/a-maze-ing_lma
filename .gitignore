@@ -205,3 +205,5 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+a-maze-ing/\"maze.txt\"
+a-maze-ing/maze.txt
