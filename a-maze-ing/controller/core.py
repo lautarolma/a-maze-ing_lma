@@ -61,6 +61,7 @@ def run_visuals(maze, pattern, config) -> None:
             If there is an error during the display
             of the maze or the solution animation."""
 
+    print("\033[H\033[J\033[3J", end="")
     running = True
     show_solution = False
     MARGIN = 20
