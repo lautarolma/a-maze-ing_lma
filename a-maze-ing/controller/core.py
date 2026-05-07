@@ -1,12 +1,5 @@
-try:
-    import readchar
-except ModuleNotFoundError as e:
-    if e.name == "readchar":
-        print("Falta la dependencia 'readchar'. Instala con: make install")
-        raise SystemExit(1)
-    raise
-
-from config import parse_config, maze_validator, check_42_pattern
+import readchar
+from config import ConfigFormat, parse_config, maze_validator, check_42_pattern
 from ui import (
     animation,
     header_animation,
@@ -14,13 +7,13 @@ from ui import (
     display_maze,
     DisplayMazeError
 )
-from mazegen import Maze
+from mazegen import MazeGenerator as Maze
 
 
-def setup_config(file_path: str) -> dict:
+def setup_config(file_path: str) -> ConfigFormat:
     """initialize the configuration by parsing and validating the config file.
     Args:    file_path (str): The path to the configuration file.
-    Returns:    dict: The validated configuration dictionary."""
+    Returns:    ConfigFormat: The validated configuration dictionary."""
 
     config = parse_config(file_path)
     maze_validator(config)
@@ -41,7 +34,14 @@ def build_maze(config) -> tuple[Maze, list[tuple[int, int]] | None]:
             coordinates for the '42' pattern cells, or None if the pattern
             is not applied."""
 
-    maze = Maze(config)
+    maze = Maze(
+        width=config["width"],
+        height=config["height"],
+        entry_xy=config["entry_xy"],
+        exit_xy=config["exit_xy"],
+        perfect=config["perfect"],
+        seed=config["seed"]
+    )
     maze.generate()
     pattern = None
     if check_42_pattern(config):
@@ -118,7 +118,7 @@ def run_visuals(maze, pattern, config) -> None:
         else:
             print("\a", end="")
 
-        maze.save_to_file()
+        maze.save_to_file(config["output_file"])
 
     print("\033[H\033[J\033[3J", end="")
     print("bye!")

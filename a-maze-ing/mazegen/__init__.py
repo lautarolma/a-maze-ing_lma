@@ -1,4 +1,4 @@
-from .maze_generator import Maze, Cell
-block_42_pattern = Maze.block_42_pattern
+from .maze_generator import MazeGenerator, Cell
+block_42_pattern = MazeGenerator.block_42_pattern
 
-__all__ = ["Maze", "Cell", "block_42_pattern"]
+__all__ = ["MazeGenerator", "Cell", "block_42_pattern"]
