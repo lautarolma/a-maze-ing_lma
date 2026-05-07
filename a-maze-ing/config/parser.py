@@ -13,7 +13,6 @@ OPTIONAL_KEYS: set[str] = {
         "SEED",
         "PERFECT",
         "RANDOM_COLOR",
-        "INSTANT_SOLUTION",
         "SEED",
         "THEME_IDX"
     }
