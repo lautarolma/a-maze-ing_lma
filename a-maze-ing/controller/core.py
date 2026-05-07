@@ -4,7 +4,7 @@ import os
 import time
 import readchar
 from config import parse_config, maze_validator, check_42_pattern
-from ui import animation, determine_display_mode, header_yield, menu_visuals
+from ui import animation, header_animation, menu_visuals
 from mazegen import Maze
 from ui.display import display_maze
 
@@ -35,17 +35,7 @@ def run_visuals(maze, pattern, config):
 
     running = True
 
-    try:
-        base_dir = os.path.dirname(__file__)
-        file_path = os.path.join(base_dir, "header.txt")
-
-        for c in header_yield(file_path):
-            print(c, end="", flush=True)
-            time.sleep(0.00005)
-            print("\033[s", end="")
-
-    except FileNotFoundError as e:
-        print(f"Caught an error: {e}")
+    header_animation()
 
     MARGIN = 20
     show_solution = False
