@@ -49,8 +49,12 @@ def check_42_pattern(config: dict) -> bool:
     if patttern_42:
         cells_to_block = block_42_pattern(width, height)
         if tuple(entry) in cells_to_block:
-            raise ImposibleMazeError("Entry point is blocked by the 42 pattern.")
+            raise ImposibleMazeError(
+                "Entry point is blocked by the 42 pattern."
+                )
         if tuple(exit) in cells_to_block:
-            raise ImposibleMazeError("Exit point is blocked by the 42 pattern.")
+            raise ImposibleMazeError(
+                "Exit point is blocked by the 42 pattern."
+                )
 
     return patttern_42

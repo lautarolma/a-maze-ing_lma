@@ -85,7 +85,7 @@ def parse_config(config_file_path: str) -> ConfigFormat:
 
     except FileNotFoundError as e:
         raise MazeConfigError("Config file not found: "
-                        f"{config_file_path}: {e}")
+                              f"{config_file_path}: {e}")
 
     except PermissionError as e:
         raise MazeConfigError("Permission error trying to open: "
@@ -170,7 +170,6 @@ def parse_config(config_file_path: str) -> ConfigFormat:
 
     # UI SETTINGS (default values)
     theme_idx = int(temp.get("THEME_IDX", 4))
-    #instant_solution = temp.get("INSTANT_SOLUTION", "false").lower() == "true"
     random_color = temp.get("RANDOM_COLOR", "false").lower() == "true"
 
     # Return ConfigFormat
