@@ -48,7 +48,6 @@ class ConfigFormat(TypedDict):
     seed: int | None
     seed: int | None
     theme_idx: int
-    instant_solution: bool
     random_color: bool
 
 
@@ -176,13 +175,12 @@ def parse_config(config_file_path: str) -> ConfigFormat:
     return {
             "width": width,
             "height": height,
-            "entry": entry_xy,
-            "exit": exit_xy,
+            "entry_xy": entry_xy,
+            "exit_xy": exit_xy,
             "output_file": temp["OUTPUT_FILE"],
             "perfect": perfect,
             "seed": seed,
             "theme_idx": theme_idx,
-            # "instant_solution": instant_solution,
             "random_color": random_color
             }
 

@@ -32,21 +32,31 @@ class Cell:
 
 
 # Class Maze and methods
-class Maze:
+class MazeGenerator:
     DIR_DELTA = {'N': (0, -1), 'S': (0, 1), 'E': (1, 0), 'W': (-1, 0)}
     DIR_CHAR = {'N': 'N', 'S': 'S', 'E': 'E', 'W': 'W'}
 
-    def __init__(self, data: ConfigFormat):
-        self.width: int = data['width']
-        self.height: int = data['height']
-        self.entry_xy: tuple[int, int] = data['entry']
-        self.exit_xy: tuple[int, int] = data['exit']
-        self.perfect: bool = data['perfect']
-        self.out_file: str = data['output_file']
-        self.seed: int | None = data.get('seed')
+    # para iniciar necesita todos los datos del config,
+    # se guardan en variables de clase
+    def __init__(
+            self,
+            width: int,
+            height: int,
+            entry_xy: tuple[int, int],
+            exit_xy: tuple[int, int],
+            perfect: bool,
+            # out_file: str,
+            seed: int | None = None) -> None:
+        self.width: int = width
+        self.height: int = height
+        self.entry_xy: tuple[int, int] = entry_xy
+        self.exit_xy: tuple[int, int] = exit_xy
+        self.perfect: bool = perfect
+        # self.out_file: str = out_file
+        self.seed: int | None = seed
         self.grid = [[Cell(x, y) for y in range(self.height)]
                      for x in range(self.width)]
-        
+
     @staticmethod
     def block_42_pattern(width: int, height: int) -> set[tuple[int, int]]:
         """
@@ -61,7 +71,7 @@ class Maze:
         ]
         ox = (width - 7) // 2
         oy = (height - 5) // 2
-        
+
         cells_to_block: set[tuple[int, int]] = set()
         for r in range(5):
             for c in range(7):
@@ -162,7 +172,7 @@ class Maze:
 
         solve_list.reverse()
         return solve_list
-    
+
     def hex_maze(self) -> list[str]:
         """
         return hex representation of maze
@@ -187,11 +197,11 @@ class Maze:
             hex_maze.append(line)
         return hex_maze
 
-    def save_to_file(self):
+    def save_to_file(self, filename: str) -> None:
         """
         saves hex representation of maze and solution
         """
-        file = self.out_file
+        file = filename
         solution = self.solve()
         direction_list = [d for _, d in solution]
         hex_maze = self.hex_maze()

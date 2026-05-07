@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-from .parser import MazeConfigError, ImposibleMazeError
+from .parser import ConfigFormat, MazeConfigError, ImposibleMazeError
 
 
-def maze_validator(config: dict) -> bool:
+def maze_validator(config: ConfigFormat) -> bool:
     """
     Validates the maze configuration dictionary
     against defined rules and constraints.
     """
     width = config["width"]
     height = config["height"]
-    entry = config["entry"]
-    exit = config["exit"]
+    entry = config["entry_xy"]
+    exit = config["exit_xy"]
 
     if width > 60 or height > 60:
         raise MazeConfigError(f"Width '{width if width > 50 else height}' "
@@ -32,15 +32,15 @@ def maze_validator(config: dict) -> bool:
     return True
 
 
-def check_42_pattern(config: dict) -> bool:
+def check_42_pattern(config: ConfigFormat) -> bool:
     """
     Checks if the '42' pattern can be applied to the maze.
     """
     from mazegen import block_42_pattern
     width = config["width"]
     height = config["height"]
-    entry = config["entry"]
-    exit = config["exit"]
+    entry = config["entry_xy"]
+    exit = config["exit_xy"]
     patttern_42 = True
     if width < 15 or height < 15:
         print("Warning: Maze dimensions are too small to accommodate "
