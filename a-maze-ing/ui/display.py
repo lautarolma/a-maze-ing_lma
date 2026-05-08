@@ -3,7 +3,7 @@ import os
 import random
 from typing import Generator
 import time
-from mazegen import Maze
+from mazegen import MazeGenerator as Maze
 import shutil
 
 # Color palette: Each theme is a list of ANSI escape codes for background,
