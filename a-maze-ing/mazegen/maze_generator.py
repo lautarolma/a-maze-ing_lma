@@ -1,6 +1,9 @@
-from config import MazeConfigError, ConfigFormat
 import random
 from collections import deque
+
+class MazeGenerationError(Exception):
+    """Custom exception for maze generation errors."""
+    pass
 
 
 # class Cell and methods
@@ -151,16 +154,16 @@ class MazeGenerator:
                 break
             # BFS, checks all posible directions
             for d, (dx, dy) in self.DIR_DELTA.items():
-                nx, ny = cx + dx, cy + dy # moves to first direction (N,S,W,E)
-                if (0 <= nx < self.width # if is on w limit
-                    and 0 <= ny < self.height # if is on h limit
-                    and (nx, ny) not in origin # if the cell have not been explored
+                nx, ny = cx + dx, cy + dy  # moves to first direction (N,S,W,E)
+                if (0 <= nx < self.width  # if is on w limit
+                    and 0 <= ny < self.height  # if is on h limit
+                    and (nx, ny) not in origin  # if the cell have not been explored
                     and not self.grid[cx][cy].walls[d]): # if the wall (ex N) is False
                     origin[(nx, ny)] = ((cx, cy), d) # saves the cell, origin and 'move'
                     explored.append((nx, ny)) # save in explored cells
 
         if self.exit_xy not in origin:
-            raise MazeConfigError("Exit not found")
+            raise MazeGenerationError("Exit not found")
 
         solve_list: list[tuple[Cell, str]] = []
         pos = self.exit_xy
@@ -222,5 +225,19 @@ class MazeGenerator:
                     f.write(d)
         except OSError as e:
             print(f"Caught an error generating 'maze.txt' file: {e}")
-    
-    
+
+    def get_maze_grid(self) -> list[list[int]]:
+        """
+        Gets the maze grid as a 2D list of integers, where each integer
+        represents the walls of a cell in hexadecimal format.
+        """
+        return [
+            [int(char, 16) for char in row]
+            for row in self.hex_maze()
+        ]
+
+    def get_maze_solution(self) -> list[str]:
+        """
+        Gets the solution to the maze as a list of NSWE directions
+        """
+        return [d for _, d in self.solve()]
