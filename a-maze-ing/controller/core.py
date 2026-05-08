@@ -1,4 +1,11 @@
-import readchar
+try:
+    import readchar
+except ModuleNotFoundError as e:
+    if e.name == "readchar":
+        print("Falta la dependencia 'readchar'. Instala con: make install")
+        raise SystemExit(1)
+    raise
+
 from config import parse_config, maze_validator, check_42_pattern
 from ui import (
     animation,

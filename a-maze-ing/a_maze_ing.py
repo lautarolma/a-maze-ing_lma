@@ -25,4 +25,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except (KeyboardInterrupt, EOFError):
+        print("\nUser interrupted. Bye!")
+        raise SystemExit(0)
