@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import traceback
 from controller import setup_config, build_maze, run_visuals
 from config import MazeConfigError
 from ui import DisplayMazeError

@@ -224,7 +224,7 @@ Analicis de las funciones:
         Escanea las paredes verticales internas. Por ejemplo, mira si la celda
         (sx, sy) tiene su pared Este (E) intacta. Si encuentra una sola pared en
         estado True dentro de la zona, detiene toda la comprobación inmediatamente
-        (return False). Esa zona no es un pasillo de 3x3 puro; tiene al menos un
+        (return False). Esa zona NO ES un pasillo de 3x3 puro; tiene al menos un
         tabique. Si ambos bucles for (el de paredes verticales internas y
         horizontales internas) terminan sin haber encontrado ni una sola pared
         levantada, significa que ese espacio es un bloque de 3x3 completamente
@@ -258,3 +258,38 @@ Resumen del flujo de ejecucion:
         bucle hasta completarlos. Si finaliza el recorrido sin ningun bloque
         3x3 abierto, el muro roto por add_cycles permanecera abierto permanen-
         temente. Luego salta a la siguiente comprobacion en el "intact_walls"
+
+
+Pasos para construir el _add_cycles():
+
+1- Inicializar bloque 42
+2- Inicializar la lista vacia de tuplas (celda, celda, muro(E/S), muro(O/N))
+3- Iterar el eje x, dentro iterar el eje y
+4- Inicializamos c1 en la posicion actual(partiendo de arriba a la izquierda
+    = x=0, y=0) y chequeamos que no este en pattern42.
+5- Chequeamos el vecino del este (siguiente en x) y miramos si el muro esta
+    intacto y si estamos dentro de los limites del maze (c1 <= self.width - 1)
+    
+    c2 = self.grid[x+1][y]
+
+   - Si los requisitos se cumplen(c1 y c2 =No42block, muro1 y muro2 =True)
+        añadimos muros a la lista (c1,c2,E/S,O/N)
+6- Chequeamos vecino del sur. Mismas condiciones y pasos.
+
+7- Acabadas las iteraciones, Mezclamos la lista con random.suffle(intact_walls)
+8- Empieza simulacion de ruptura de muros:
+
+    1- Rompemos el primer par de muros de la lista
+    2- Verificamos en bloque for los posibles origenes del 3x3 a partir de 
+        sx, sy (start x, start y)
+
+        - Se iterara por cada posible origen y se comprueba si 
+            "post-ruptura del muro" is_3x3_open() = true
+
+        - Si falla, marcamos un boolean que ntofica el creates_3x3, rompe el 
+            bucle con break, saliendo del iterador sx, sy de esa dupla
+            de muro y pasamos al mismo analicis de la prox dupla de la lista.
+
+    3- Comprobacion del boolean creates 3x3, si resulta true, revertimos
+        la simulacion y toca levantar nuevamente el muro, si no, el muro se
+        queda derrumbado indefinidamente.
