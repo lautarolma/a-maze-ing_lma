@@ -10,7 +10,6 @@ MANDATORY_KEYS: set[str] = {
     }
 
 OPTIONAL_KEYS: set[str] = {
-        "SEED",
         "PERFECT",
         "RANDOM_COLOR",
         "SEED",

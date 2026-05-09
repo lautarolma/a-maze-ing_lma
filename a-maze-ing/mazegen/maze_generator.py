@@ -1,6 +1,7 @@
 from config import MazeConfigError, ConfigFormat
 import random
 from collections import deque
+from collections.abc import Iterator
 
 
 # Class Cell and methods
@@ -48,6 +49,19 @@ class MazeGenerator:
             # out_file: str,
             seed: int | None = None) -> None:
         """
+            Initialize a maze generator with the configured dimensions and
+            endpoints.
+            Args:
+                width (int): Number of columns in the maze.
+                height (int): Number of rows in the maze.
+                entry_xy (tuple[int, int]): Coordinates of the maze entry
+                    cell.
+                exit_xy (tuple[int, int]): Coordinates of the maze exit
+                    cell.
+                perfect (bool): Whether to generate a perfect maze without
+                    cycles.
+                seed (int | None): Optional random seed for reproducible
+                    generation.
         """
         self.width: int = width
         self.height: int = height
@@ -158,7 +172,7 @@ class MazeGenerator:
                     c1.union(c2)
 
     def _add_cycles(self) -> None:
-        """Inyection of cycles to the maze structure"""
+        """Injection of cycles to the maze structure"""
         pattern_42 = self.block_42_pattern(self.width, self.height)
         intact_walls: list[tuple[Cell, Cell, str, str]] = []
         
@@ -288,7 +302,11 @@ class MazeGenerator:
 
  
     
-    def _fetch_3x3_origin(self, c1, c2) -> Cell:
+    def _fetch_3x3_origin(
+        self,
+        c1: Cell,
+        c2: Cell
+        ) -> Iterator[tuple[int, int]]:
         "Returns the posibles rooth cell/origins of the 3x3 area creations"
         #For vertical walls
         if c1.x != c2.x:
@@ -306,6 +324,6 @@ class MazeGenerator:
         for sx in range_x:
             for sy in range_y:
                 #Bounds cheking
-                if 0 < sx < self.width - 3 and 0 < sy <= self.height - 3:
+                if 0 <= sx <= self.width - 3 and 0 <= sy <= self.height - 3:
                     yield sx, sy
             
