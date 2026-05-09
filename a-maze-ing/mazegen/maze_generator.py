@@ -9,7 +9,7 @@ class MazeGenerationError(Exception):
     pass
 
 
-# class Cell and methods
+# Class Cell and methods
 class Cell:
     """
     Represents a single unit within a maze grid,
@@ -428,16 +428,89 @@ class MazeGenerator:
 
     def get_maze_grid(self) -> list[list[int]]:
         """
-        Gets the maze grid as a 2D list of integers, where each integer
-        represents the walls of a cell in hexadecimal format.
+        blocks 42 pattern cells
         """
-        return [
-            [int(char, 16) for char in row]
-            for row in self.hex_maze()
+        pattern = [
+            [1, 0, 0, 0, 1, 1, 0],
+            [1, 0, 1, 0, 0, 0, 1],
+            [1, 1, 1, 0, 0, 1, 0],
+            [0, 0, 1, 0, 1, 0, 0],
+            [0, 0, 1, 0, 1, 1, 1]
         ]
+        ox = (width - 7) // 2
+        oy = (height - 5) // 2
 
-    def get_maze_solution(self) -> list[str]:
+        cells_to_block: set[tuple[int, int]] = set()
+        for r in range(5):
+            for c in range(7):
+                if pattern[r][c] == 1:
+                    cells_to_block.add((ox + c, oy + r))
+        return cells_to_block
+
+    def _remove_wall(self, c1: Cell, c2: Cell):
         """
-        Gets the solution to the maze as a list of NSWE directions
+        checks position of two cells and removes walls inbetween
+
+        Args:
+        c1, c2 (cell): two cells that are neighbors
         """
-        return [d for _, d in self.solve()]
+        # c1 right c2 left
+        if c2.x == c1.x + 1:
+            c1.walls["E"] = False
+            c2.walls["W"] = False
+        # c2 right c1 left
+        elif c2.x == c1.x - 1:
+            c1.walls["W"] = False
+            c2.walls["E"] = False
+        # c1 up c2 under
+        elif c2.y == c1.y + 1:
+            c1.walls["S"] = False
+            c2.walls["N"] = False
+        # c2 up c1 under
+        elif c2.y == c1.y - 1:
+            c1.walls["N"] = False
+            c2.walls["S"] = False
+
+    def _is_3x3_open(self, sx, sy) -> bool:
+        "Validates area looking for 3x3 open areas"
+        #Checking on vertical walls
+        for x in range(sx, sx + 2):
+            for y in range(sy, sy + 3):
+                if self.grid[x][y].walls['E']:
+                    return False
+
+        #Checking on horizontal walls
+        for x in range(sx, sx + 3):
+            for y in range(sy, sy + 2):
+                if self.grid[x][y].walls['S']:
+                    return False
+        # At this point its a full open 3x3 block
+        return True
+
+ 
+    
+    def _fetch_3x3_origin(
+        self,
+        c1: Cell,
+        c2: Cell
+        ) -> Iterator[tuple[int, int]]:
+        "Returns the posibles rooth cell/origins of the 3x3 area creations"
+        #For vertical walls
+        if c1.x != c2.x:
+            min_x = min(c1.x, c2.x)
+            range_x = (min_x - 1, min_x)
+            range_y = (c1.y - 2, c1.y - 1, c1.y)
+        
+        #For horizontal walls
+        else:
+            min_y = min(c1.y, c2.y)
+            range_x = (c1.x - 2, c1.x - 1, c1.x)
+            range_y = (min_y - 1, min_y)
+
+        #Filtering blocks that fit into the maze
+        for sx in range_x:
+            for sy in range_y:
+                #Bounds cheking
+                if 0 <= sx <= self.width - 3 and 0 <= sy <= self.height - 3:
+                    yield sx, sy
+            
