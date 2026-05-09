@@ -45,13 +45,24 @@ class ConfigFormat(TypedDict):
     output_file: str
     perfect: bool
     seed: int | None
-    seed: int | None
     theme_idx: int
     random_color: bool
 
 
 def parse_coord(value: str) -> tuple[int, int]:
-    """Convert exit/entry coordinates into tuples"""
+    """
+    Parse a coordinate string into a tuple of integers.
+
+    Args:
+        value (str): The coordinate value from the config file in 'x,y' format.
+
+    Returns:
+        tuple[int, int]: A tuple containing the x and y integer coordinates.
+
+    Raises:
+        ValueError: If the input string does not contain exactly two elements.
+        MazeConfigError: If the coordinate values are not valid integers.
+    """
 
     coor = value.split(',')
     if len(coor) != 2:
@@ -69,6 +80,10 @@ def parse_coord(value: str) -> tuple[int, int]:
 def parse_config(config_file_path: str) -> ConfigFormat:
     """
     Parse the maze configuration file.
+
+    Args (config_file_path): the path
+
+    Returns (ConfigFormat): dict with the name and value of the parameter
 
     Raise:
         MazeConfigError if key or value are invalid

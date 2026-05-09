@@ -19,9 +19,9 @@ except ImportError:
 
 
 def setup_config(file_path: str) -> ConfigFormat:
-    """initialize the configuration by parsing and validating the config file.
-    Args:    file_path (str): The path to the configuration file.
-    Returns:    ConfigFormat: The validated configuration dictionary."""
+    """
+    Initialize the configuration by parsing and validating the config file.
+    """
 
     config = parse_config(file_path)
     maze_validator(config)
@@ -29,7 +29,9 @@ def setup_config(file_path: str) -> ConfigFormat:
     return config
 
 
-def build_maze(config) -> tuple[Maze, list[tuple[int, int]] | None]:
+def build_maze(
+        config: ConfigFormat
+        ) -> tuple[Maze, set[tuple[int, int]] | None]:
     """Generates the maze and applies the '42' pattern if applicable.
     returns the maze object and the pattern cells if the pattern is applied.
     Args:
@@ -37,8 +39,8 @@ def build_maze(config) -> tuple[Maze, list[tuple[int, int]] | None]:
             The configuration dictionary containing
             settings for the maze generation.
     Returns:
-        tuple[Maze, list[tuple[int, int]] | None]:
-            A tuple containing the generated maze object and a list of
+        tuple[Maze, Set[tuple[int, int]] | None]:
+            A tuple containing the generated maze object and a set of
             coordinates for the '42' pattern cells, or None if the pattern
             is not applied."""
 
@@ -58,15 +60,19 @@ def build_maze(config) -> tuple[Maze, list[tuple[int, int]] | None]:
     return maze, pattern
 
 
-def run_visuals(maze, pattern, config) -> None:
+def run_visuals(
+        maze: Maze,
+        pattern: set[tuple[int, int]] | None,
+        config: ConfigFormat
+        ) -> None:
     """Handles the display of the maze and the user interaction loop
     for regenerating the maze, toggling the solution animation,
     changing color themes, and quitting the program.
      Args:
         maze (Maze):
             The maze object to be displayed.
-        pattern (list[tuple[int, int]] | None):
-            List of coordinates for the '42'
+        pattern (Set[tuple[int, int]] | None):
+            Set of coordinates for the '42'
             pattern cells, or None if the pattern is not applied.
         config (dict):
             The configuration dictionary containing settings for the maze
@@ -91,7 +97,7 @@ def run_visuals(maze, pattern, config) -> None:
             display_maze(
                 maze,
                 pattern,
-                maze.solve(),
+                # maze.solve(),
                 config["theme_idx"],
                 config["random_color"]
             )

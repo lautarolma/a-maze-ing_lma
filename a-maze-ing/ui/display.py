@@ -59,8 +59,8 @@ class DisplayMazeError(Exception):
 
 def print_maze(
         maze: Maze,
-        pattern_42: set[tuple[int, int]],
-        solution_path: list[tuple[int, int]] | None = None,
+        pattern_42: set[tuple[int, int]] | None,
+        # solution_path: list[tuple[tuple[int, int], str]] | None = None,
         # maze_fits: bool = False, ya no es necesario,
         # se determina desde run_visuals()
         # show_solution: bool = False, ya no es necesario,
@@ -155,13 +155,13 @@ def print_maze(
         print(line_bottom)
 
 
-def header_yield(file_path: str) -> Generator[dict, None, None]:
+def header_yield(file_path: str) -> Generator[str, None, None]:
     """
     Reads a file and yields its content character by character with a delay.
         Args:
             file_path (str): The path to the file to be read.
         Yields:
-            Generator[dict, None, None]:
+            Generator[str, None, None]:
                 A generator that yields characters from the file.
     """
     try:
@@ -215,9 +215,11 @@ def static_header() -> None:
 # {value} + 'A' moves the terminal-cursor to up direction n_value times.
 # {value} + 'C' moves the terminal-cursor to right direction n_value times.
 
-def animation(maze, solution_path: list, theme_idx: int = 4) -> None:
+def animation(maze: Maze,
+              solution_path: list[tuple[tuple[int, int], str]],
+              theme_idx: int = 4) -> None:
     """
-    prints step by step the solution path with a delay between each step.
+    Prints step by step the solution path with a delay between each step.
         Args:
             maze (Maze): The maze object being displayed.
             solution_path (list[tuple[int, int]]):
@@ -317,8 +319,8 @@ def menu_visuals(theme_idx: int) -> None:
 
 def display_maze(
         maze: Maze,
-        pattern_42: set[tuple[int, int]],
-        solution_path: list[tuple[int, int]] | None = None,
+        pattern_42: set[tuple[int, int]] | None,
+        # solution_path: list[tuple[tuple[int, int], str]],
         # maze_fits: bool = False, se determina desde run_visuals()
         # instant_solution: bool = False, no es necesario,
         # se determina con el menú
@@ -348,7 +350,7 @@ def display_maze(
     print_maze(
         maze,
         pattern_42,
-        solution_path,
+        # solution_path,
         # maze_fits,
         # instant_solution,
         theme_idx,

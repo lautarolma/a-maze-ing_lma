@@ -1,5 +1,7 @@
+from __future__ import annotations
 import random
 from collections import deque
+
 
 class MazeGenerationError(Exception):
     """Custom exception for maze generation errors."""
@@ -14,16 +16,16 @@ class Cell:
         self.parent = self
         self.walls = {"N": True, "S": True, "E": True, "W": True}
 
-    def find(self):
+    def find(self) -> Cell:
         """find the cell's origin"""
         if self.parent != self:
             self.parent = self.parent.find()
         return self.parent
 
-    def union(self, other):
+    def union(self, other: Cell) -> None:
         """
         Merges the set of this cell with the set of the other cell.
-    
+
         Args:
         other (Cell): The neighboring cell with which the merge is performed.
         """
@@ -82,7 +84,7 @@ class MazeGenerator:
                     cells_to_block.add((ox + c, oy + r))
         return cells_to_block
 
-    def _remove_wall(self, c1: Cell, c2: Cell):
+    def _remove_wall(self, c1: Cell, c2: Cell) -> None:
         """
         checks position of two cells and removes walls inbetween
 
@@ -106,14 +108,25 @@ class MazeGenerator:
             c1.walls["N"] = False
             c2.walls["S"] = False
 
-    def _generate_logic(self):
-        pattern_42 = self.block_42_pattern(self.width, self.height)
+    def _generate_logic(self) -> None:
+        """
+    Generate the maze structure using a randomized wall-removal algorithm.
+
+    This internal method initializes the grid walls, optionally applies the 
+    '42' pattern as a mask, and create a spanning tree of connected cells.
+    """
+        if self.width >= 15 and self.height >= 15:
+            pattern_42 = self.block_42_pattern(self.width, self.height)
+        else:
+            pattern_42 = None
+        active_pattern = set(pattern_42) if pattern_42 is not None else set()
         walls = []
         for x in range(self.width):
             for y in range(self.height):
                 # if the cell is in 42 pattern
-                if (x, y) in pattern_42:
-                    continue
+                if pattern_42 is not None:
+                    if (x, y) in pattern_42:
+                        continue
                 if x < self.width - 1:
                     walls.append((self.grid[x][y], self.grid[x+1][y]))
                 if y < self.height - 1:
@@ -125,61 +138,94 @@ class MazeGenerator:
 
         for c1, c2 in walls:
             p_42 = False
-            if (c1.x, c1.y) in pattern_42:
+            if (c1.x, c1.y) in active_pattern:
                 p_42 = True
-            elif (c2.x, c2.y) in pattern_42:
+            elif (c2.x, c2.y) in active_pattern:
                 p_42 = True
             if not p_42:
                 if c1.find() != c2.find():
                     self._remove_wall(c1, c2)
                     c1.union(c2)
 
-    def generate(self):
+    def generate(self) -> None:
         """
         generates the maze using randomized Kruskal's algorithm
+        **completar con la logica que está haciendo Lau
         """
         self._generate_logic()
         # añadido para probar no_perfect
         # if not self.perfect:
-            # romper pardes extra
+        # romper pardes extra
 
+    def solve(self) -> list[tuple[tuple[int, int], str]]:
+        """
+        Solve the maze using the Breadth-First Search (BFS) algorithm.
 
-    # Solve Maze using BFS
-    def solve(self) -> list[tuple[Cell, str]]:
+        BFS explores the maze level by level to find the shortest path from the 
+        entry point to the exit point, ensuring an optimal solution in an 
+        unweighted grid.
+
+        Returns:
+            list[tuple[tuple[int, int], str]]: A list of steps representing the 
+                path from start to finish. Each step is a tuple containing the 
+                (x, y) coordinates of the cell and the direction taken to move 
+                to the next one.
+
+        Raises:
+            MazeGenerationError: If the exit point is unreachable from the entry point.
+        """
+
         explored: deque[tuple[int, int]] = deque([self.entry_xy])
-        origin: dict[tuple[int, int], tuple[tuple[int, int], str] | None] = {self.entry_xy: None}
+
+        origin: dict[tuple[int, int],
+                     tuple[tuple[int, int],
+                           str] | None] = {self.entry_xy: None}
         while explored:
+
             cx, cy = explored.popleft()
+
             if (cx, cy) == self.exit_xy:
                 break
-            # BFS, checks all posible directions
+
             for d, (dx, dy) in self.DIR_DELTA.items():
+
                 nx, ny = cx + dx, cy + dy  # moves to first direction (N,S,W,E)
-                if (0 <= nx < self.width  # if is on w limit
-                    and 0 <= ny < self.height  # if is on h limit
-                    and (nx, ny) not in origin  # if the cell have not been explored
-                    and not self.grid[cx][cy].walls[d]): # if the wall (ex N) is False
-                    origin[(nx, ny)] = ((cx, cy), d) # saves the cell, origin and 'move'
-                    explored.append((nx, ny)) # save in explored cells
+
+                if (0 <= nx < self.width
+                        # if is on w limit
+                        and 0 <= ny < self.height
+                        # have not been explored yet
+                        and (nx, ny) not in origin
+                        # Wall False in the direction we want to go
+                        and not self.grid[cx][cy].walls[d]):
+
+                    # save the origin and direction taken to reach the new cell
+                    origin[(nx, ny)] = ((cx, cy), d)
+
+                    # save in explored cells
+                    explored.append((nx, ny))
 
         if self.exit_xy not in origin:
             raise MazeGenerationError("Exit not found")
 
-        solve_list: list[tuple[Cell, str]] = []
+        solve_list: list[tuple[tuple[int, int], str]] = []
+
         pos = self.exit_xy
-        while origin[pos] is not None:
-            info = origin[pos]
+
+        info = origin[pos]
+        while info is not None:
+
             pos = info[0]
             add = pos, info[1]
             solve_list.append(add)
+            info = origin[pos]
 
         solve_list.reverse()
+
         return solve_list
 
     def hex_maze(self) -> list[str]:
-        """
-        return hex representation of maze
-        """
+        """ Return hex representation of maze """
         hex_str = "0123456789ABCDEF"
         hex_maze = []
         line = ""
@@ -201,9 +247,7 @@ class MazeGenerator:
         return hex_maze
 
     def save_to_file(self, filename: str) -> None:
-        """
-        saves hex representation of maze and solution
-        """
+        """ Saves hex representation of maze and solution in filename.txt """
         file = filename
         solution = self.solve()
         direction_list = [d for _, d in solution]
@@ -224,7 +268,7 @@ class MazeGenerator:
                 for d in direction_list:
                     f.write(d)
         except OSError as e:
-            print(f"Caught an error generating 'maze.txt' file: {e}")
+            print(f"Caught an error generating '{filename}.txt' file: {e}")
 
     def get_maze_grid(self) -> list[list[int]]:
         """
