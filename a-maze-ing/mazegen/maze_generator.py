@@ -192,22 +192,6 @@ class MazeGenerator:
         except OSError as e:
             print(f"Caught an error generating '{filename}.txt' file: {e}")
 
-    def get_maze_grid(self) -> list[list[int]]:
-        """
-        Gets the maze grid as a 2D list of integers, where each integer
-        represents the walls of a cell in hexadecimal format.
-        """
-        return [
-            [int(char, 16) for char in row]
-            for row in self.hex_maze()
-        ]
-
-    def get_maze_solution(self) -> list[str]:
-        """
-        Gets the solution to the maze as a list of NSWE directions
-        """
-        return [d for _, d in self.solve()]
-
     # --- PRIVATE GENERATION LOGICS ---
     def _generate_logic(self) -> None:
         """
@@ -303,51 +287,6 @@ class MazeGenerator:
                 c1.walls[wall1] = True
                 c2.walls[wall2] = True
 
-    # --- UTILITIES/HELPERS ---
-    def hex_maze(self) -> list[str]:
-        """ Return hex representation of maze """
-        hex_str = "0123456789ABCDEF"
-        hex_maze = []
-        line = ""
-        for y in range(self.height):
-            line = ""
-            for x in range(self.width):
-                cell = self.grid[x][y]
-                value = 0
-                if cell.walls['N']:
-                    value += 1
-                if cell.walls['E']:
-                    value += 2
-                if cell.walls['S']:
-                    value += 4
-                if cell.walls['W']:
-                    value += 8
-                line += hex_str[value]
-            hex_maze.append(line)
-        return hex_maze
-
-    @staticmethod
-    def block_42_pattern(width: int, height: int) -> set[tuple[int, int]]:
-        """
-        Returns the cells that forms the 42 pattern
-        """
-        pattern = [
-            [1, 0, 0, 0, 1, 1, 0],
-            [1, 0, 1, 0, 0, 0, 1],
-            [1, 1, 1, 0, 0, 1, 0],
-            [0, 0, 1, 0, 1, 0, 0],
-            [0, 0, 1, 0, 1, 1, 1]
-        ]
-        ox = (width - 7) // 2
-        oy = (height - 5) // 2
-
-        cells_to_block: set[tuple[int, int]] = set()
-        for r in range(5):
-            for c in range(7):
-                if pattern[r][c] == 1:
-                    cells_to_block.add((ox + c, oy + r))
-        return cells_to_block
-
     def _remove_wall(self, c1: Cell, c2: Cell) -> None:
         """
         checks position of two cells and removes walls inbetween
@@ -441,3 +380,64 @@ class MazeGenerator:
                 # Bounds cheking
                 if 0 <= sx <= self.width - 3 and 0 <= sy <= self.height - 3:
                     yield sx, sy
+
+    # --- UTILITIES/HELPERS ---
+    def hex_maze(self) -> list[str]:
+        """ Return hex representation of maze """
+        hex_str = "0123456789ABCDEF"
+        hex_maze = []
+        line = ""
+        for y in range(self.height):
+            line = ""
+            for x in range(self.width):
+                cell = self.grid[x][y]
+                value = 0
+                if cell.walls['N']:
+                    value += 1
+                if cell.walls['E']:
+                    value += 2
+                if cell.walls['S']:
+                    value += 4
+                if cell.walls['W']:
+                    value += 8
+                line += hex_str[value]
+            hex_maze.append(line)
+        return hex_maze
+
+    @staticmethod
+    def block_42_pattern(width: int, height: int) -> set[tuple[int, int]]:
+        """
+        Returns the cells that forms the 42 pattern
+        """
+        pattern = [
+            [1, 0, 0, 0, 1, 1, 0],
+            [1, 0, 1, 0, 0, 0, 1],
+            [1, 1, 1, 0, 0, 1, 0],
+            [0, 0, 1, 0, 1, 0, 0],
+            [0, 0, 1, 0, 1, 1, 1]
+        ]
+        ox = (width - 7) // 2
+        oy = (height - 5) // 2
+
+        cells_to_block: set[tuple[int, int]] = set()
+        for r in range(5):
+            for c in range(7):
+                if pattern[r][c] == 1:
+                    cells_to_block.add((ox + c, oy + r))
+        return cells_to_block
+    
+    def get_maze_grid(self) -> list[list[int]]:
+        """
+        Gets the maze grid as a 2D list of integers, where each integer
+        represents the walls of a cell in hexadecimal format.
+        """
+        return [
+            [int(char, 16) for char in row]
+            for row in self.hex_maze()
+        ]
+
+    def get_maze_solution(self) -> list[str]:
+        """
+        Gets the solution to the maze as a list of NSWE directions
+        """
+        return [d for _, d in self.solve()]
