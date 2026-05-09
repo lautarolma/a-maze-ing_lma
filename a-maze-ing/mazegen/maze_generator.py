@@ -172,7 +172,7 @@ class MazeGenerator:
                 if x < self.width - 1 and c1.walls['E']:
                     c2 = self.grid[x+1][y]
                     if (c2.x, c2.y) not in pattern_42:
-                        intact_walls.append((c1, c2, 'E', 'O'))
+                        intact_walls.append((c1, c2, 'E', 'W'))
 
                 #Checking south-neighbor
                 if y < self.height - 1 and c1.walls['S']:
