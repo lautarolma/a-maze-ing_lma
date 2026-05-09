@@ -1,7 +1,10 @@
-from config import MazeConfigError, ConfigFormat
 import random
 from collections import deque
 from collections.abc import Iterator
+
+class MazeGenerationError(Exception):
+    """Custom exception for maze generation errors."""
+    pass
 
 
 # Class Cell and methods

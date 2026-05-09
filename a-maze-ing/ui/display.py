@@ -1,4 +1,3 @@
-from __future__ import annotations
 import os
 import random
 from typing import Generator
@@ -165,10 +164,14 @@ def header_yield(file_path: str) -> Generator[dict, None, None]:
             Generator[dict, None, None]:
                 A generator that yields characters from the file.
     """
-    with open(file_path, encoding='utf-8') as f:
-        for line in f:
-            for c in line:
-                yield c
+    try:
+        with open(file_path, encoding='utf-8') as f:
+            for line in f:
+                for c in line:
+                    yield c
+
+    except FileNotFoundError as e:
+        print(f"Caught an error: {e}")
 
 
 def header_animation() -> None:
@@ -182,8 +185,23 @@ def header_animation() -> None:
 
         for c in header_yield(file_path):
             print(c, end="", flush=True)
-            time.sleep(0.00005)
+            time.sleep(0.0005)
             print("\033[s", end="")
+
+    except FileNotFoundError as e:
+        print(f"Caught an error: {e}")
+
+
+def static_header() -> None:
+    """
+    Displays the static header without animation.
+    """
+    try:
+        base_dir = os.path.dirname(__file__)
+        file_path = os.path.join(base_dir, "header.txt")
+
+        with open(file_path, encoding='utf-8') as f:
+            print(f.read(), end="", flush=True)
 
     except FileNotFoundError as e:
         print(f"Caught an error: {e}")
@@ -227,8 +245,7 @@ def animation(maze, solution_path: list, theme_idx: int = 4) -> None:
             # Regresa al final
             print("\033[u", end="", flush=True)
             raise DisplayMazeError(
-                "Terminal resized during animation. Returning to safe state."
-                )
+                "Terminal resized during animation. Returning to safe state.")
         # Reestablece el cursor al checkpoint
         print("\033[u", end="")
 
@@ -276,8 +293,7 @@ def check_display_size(
         print(f"\033[{header_lines + safety_margin};0H", end="")
         raise DisplayMazeError(
             "Terminal size is too small to display the maze properly."
-            "\nPlease resize your terminal and try again."
-                )
+            "\nPlease resize your terminal and try again.")
 
 
 def menu_visuals(theme_idx: int) -> None:

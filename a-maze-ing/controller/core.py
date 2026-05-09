@@ -1,13 +1,21 @@
-import readchar
+import sys
 from config import ConfigFormat, parse_config, maze_validator, check_42_pattern
 from ui import (
     animation,
     header_animation,
+    static_header,
     menu_visuals,
     display_maze,
     DisplayMazeError
 )
 from mazegen import MazeGenerator as Maze
+try:
+    import readchar
+except ImportError:
+    print("[ERROR] Library 'readchar' is missing", file=sys.stderr)
+    print("please run 'make install' (or: 'pip install .') "
+          "to install the required dependencies", file=sys.stderr)
+    sys.exit(1)
 
 
 def setup_config(file_path: str) -> ConfigFormat:
@@ -71,13 +79,14 @@ def run_visuals(maze, pattern, config) -> None:
     print("\033[H\033[J\033[3J", end="")
     running = True
     show_solution = False
-    MARGIN = 20
-
     header_animation()
 
     while running:
-        print(f"\033[{MARGIN};1H", end="")
-        print("\033[J", end="")
+
+        print("\033[H\033[2J\033[3J", end="", flush=True)
+
+        static_header()
+
         try:
             display_maze(
                 maze,
@@ -86,13 +95,16 @@ def run_visuals(maze, pattern, config) -> None:
                 config["theme_idx"],
                 config["random_color"]
             )
+
         except DisplayMazeError as e:
             print(f"\nDisplayMazeError: {e}")
             return
 
         if show_solution:
+
             try:
                 animation(maze, maze.solve(), config["theme_idx"])
+
             except DisplayMazeError as e:
                 print(f"\n\nDisplayMazeError: {e}")
                 print("bye!")
@@ -100,23 +112,29 @@ def run_visuals(maze, pattern, config) -> None:
 
         menu_visuals(config["theme_idx"])
 
-        key = readchar.readkey()
+        try:
 
-        if key == "q":
-            running = False
+            key = readchar.readkey()
 
-        elif key == "r":
-            show_solution = False
-            maze, pattern = build_maze(config)
+            if key == "q" or key == "Q":
+                running = False
 
-        elif key == "s":
-            show_solution = not show_solution
+            elif key == "r" or key == "R":
+                show_solution = False
+                maze, pattern = build_maze(config)
 
-        elif key == "c":
-            config["theme_idx"] = (config["theme_idx"] + 1) % 5
+            elif key == "s" or key == "S":
+                show_solution = not show_solution
 
-        else:
-            print("\a", end="")
+            elif key == "c" or key == "C":
+                config["theme_idx"] = (config["theme_idx"] + 1) % 5
+
+            else:
+                print("\a", end="")
+
+        except KeyboardInterrupt:
+            print("\nKeyboardInterrupt detected. Bye!...", file=sys.stderr)
+            return
 
         maze.save_to_file(config["output_file"])
 

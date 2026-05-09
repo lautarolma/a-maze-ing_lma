@@ -12,14 +12,16 @@ def main():
         return
 
     try:
-        config = setup_config(sys.argv[1])   
+        config = setup_config(sys.argv[1])
+        print("tenemos config:", config)
         maze, pattern = build_maze(config)
+        print("hemos creado el maze y el pattern:")
         run_visuals(maze, pattern, config)
 
     except MazeConfigError as e:
         print(f"Configuration/Validation Error: {e}")
     except DisplayMazeError as e:
-        print(f"UI Error: {e}")
+        print(f"DisplayMazeError Error: {e}")
     except Exception as e:
         print(f"Unexpected Error: {e}")
 

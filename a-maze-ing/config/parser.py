@@ -7,13 +7,14 @@ MANDATORY_KEYS: set[str] = {
         "ENTRY",
         "EXIT",
         "OUTPUT_FILE",
+        "PERFECT",
     }
 
 OPTIONAL_KEYS: set[str] = {
-        "PERFECT",
-        "RANDOM_COLOR",
         "SEED",
-        "THEME_IDX"
+        # "RANDOM_COLOR",
+        # "INSTANT_SOLUTION",
+        # "THEME_IDX"
     }
 
 ALLOWED_KEYS: set[str] = MANDATORY_KEYS | OPTIONAL_KEYS
