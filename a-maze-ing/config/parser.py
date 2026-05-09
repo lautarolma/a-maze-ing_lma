@@ -63,18 +63,20 @@ def parse_coord(value: str) -> tuple[int, int]:
         ValueError: If the input string does not contain exactly two elements.
         MazeConfigError: If the coordinate values are not valid integers.
     """
+    coor = [c.strip() for c in value.split(',')]
 
-    coor = value.split(',')
     if len(coor) != 2:
-        raise ValueError("Invalid format for entry/exit "
-                         "(Expected x,y)")
+        raise MazeConfigError(
+            f"Invalid format for '{value}'. Expected 'x,y' (two values)."
+        )
+
     try:
         x = int(coor[0])
         y = int(coor[1])
         return (x, y)
     except ValueError:
         raise MazeConfigError(f"Invalid coordinate value: '{value}' "
-                              "(Expected x,y with integers)") from None
+                              "(Expected x,y with integers)")
 
 
 def parse_config(config_file_path: str) -> ConfigFormat:

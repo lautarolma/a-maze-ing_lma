@@ -1,6 +1,7 @@
 from __future__ import annotations
 import random
 from collections import deque
+from collections.abc import Iterator
 
 
 class MazeGenerationError(Exception):
@@ -10,7 +11,21 @@ class MazeGenerationError(Exception):
 
 # class Cell and methods
 class Cell:
+    """
+    Represents a single unit within a maze grid,
+    used for Disjoint Set Union (DSU).
+
+    A cell tracks its coordinates, its parent in the set forest for path
+    compression, and the state of its four surrounding walls.
+    """
     def __init__(self, x: int, y: int):
+        """
+        Initializes a new cell at the given coordinates.
+
+        Args:
+            x: The horizontal position of the cell in the grid.
+            y: The vertical position of the cell in the grid.
+        """
         self.x = x
         self.y = y
         self.parent = self
@@ -50,129 +65,58 @@ class MazeGenerator:
             entry_xy: tuple[int, int],
             exit_xy: tuple[int, int],
             perfect: bool,
-            # out_file: str,
             seed: int | None = None) -> None:
+        """
+            Initialize a maze generator with the configured dimensions and
+            endpoints.
+            Args:
+                width (int): Number of columns in the maze.
+                height (int): Number of rows in the maze.
+                entry_xy (tuple[int, int]): Coordinates of the maze entry
+                    cell.
+                exit_xy (tuple[int, int]): Coordinates of the maze exit
+                    cell.
+                perfect (bool): Whether to generate a perfect maze without
+                    cycles.
+                seed (int | None): Optional random seed for reproducible
+                    generation.
+        """
         self.width: int = width
         self.height: int = height
         self.entry_xy: tuple[int, int] = entry_xy
         self.exit_xy: tuple[int, int] = exit_xy
         self.perfect: bool = perfect
-        # self.out_file: str = out_file
         self.seed: int | None = seed
         self.grid = [[Cell(x, y) for y in range(self.height)]
                      for x in range(self.width)]
 
-    @staticmethod
-    def block_42_pattern(width: int, height: int) -> set[tuple[int, int]]:
-        """
-        blocks 42 pattern cells
-        """
-        pattern = [
-            [1, 0, 0, 0, 1, 1, 0],
-            [1, 0, 1, 0, 0, 0, 1],
-            [1, 1, 1, 0, 0, 1, 0],
-            [0, 0, 1, 0, 1, 0, 0],
-            [0, 0, 1, 0, 1, 1, 1]
-        ]
-        ox = (width - 7) // 2
-        oy = (height - 5) // 2
-
-        cells_to_block: set[tuple[int, int]] = set()
-        for r in range(5):
-            for c in range(7):
-                if pattern[r][c] == 1:
-                    cells_to_block.add((ox + c, oy + r))
-        return cells_to_block
-
-    def _remove_wall(self, c1: Cell, c2: Cell) -> None:
-        """
-        checks position of two cells and removes walls inbetween
-
-        Args:
-        c1, c2 (cell): two cells that are neighbors
-        """
-        # c1 right c2 left
-        if c2.x == c1.x + 1:
-            c1.walls["E"] = False
-            c2.walls["W"] = False
-        # c2 right c1 left
-        elif c2.x == c1.x - 1:
-            c1.walls["W"] = False
-            c2.walls["E"] = False
-        # c1 up c2 under
-        elif c2.y == c1.y + 1:
-            c1.walls["S"] = False
-            c2.walls["N"] = False
-        # c2 up c1 under
-        elif c2.y == c1.y - 1:
-            c1.walls["N"] = False
-            c2.walls["S"] = False
-
-    def _generate_logic(self) -> None:
-        """
-    Generate the maze structure using a randomized wall-removal algorithm.
-
-    This internal method initializes the grid walls, optionally applies the 
-    '42' pattern as a mask, and create a spanning tree of connected cells.
-    """
-        if self.width >= 15 and self.height >= 15:
-            pattern_42 = self.block_42_pattern(self.width, self.height)
-        else:
-            pattern_42 = None
-        active_pattern = set(pattern_42) if pattern_42 is not None else set()
-        walls = []
-        for x in range(self.width):
-            for y in range(self.height):
-                # if the cell is in 42 pattern
-                if pattern_42 is not None:
-                    if (x, y) in pattern_42:
-                        continue
-                if x < self.width - 1:
-                    walls.append((self.grid[x][y], self.grid[x+1][y]))
-                if y < self.height - 1:
-                    walls.append((self.grid[x][y], self.grid[x][y+1]))
-
-        if self.seed is not None:
-            random.seed(self.seed)
-        random.shuffle(walls)
-
-        for c1, c2 in walls:
-            p_42 = False
-            if (c1.x, c1.y) in active_pattern:
-                p_42 = True
-            elif (c2.x, c2.y) in active_pattern:
-                p_42 = True
-            if not p_42:
-                if c1.find() != c2.find():
-                    self._remove_wall(c1, c2)
-                    c1.union(c2)
-
+    # --- PUBLIC APIS ---
     def generate(self) -> None:
         """
-        generates the maze using randomized Kruskal's algorithm
-        **completar con la logica que está haciendo Lau
+        Generates the maze using randomized Kruskal's algorithm.
+        If PERFECT=False slef._add_cycle to break more walls
         """
         self._generate_logic()
-        # añadido para probar no_perfect
-        # if not self.perfect:
-        # romper pardes extra
+        if not self.perfect:
+            self._add_cycles()
 
     def solve(self) -> list[tuple[tuple[int, int], str]]:
         """
         Solve the maze using the Breadth-First Search (BFS) algorithm.
 
-        BFS explores the maze level by level to find the shortest path from the 
-        entry point to the exit point, ensuring an optimal solution in an 
+        BFS explores the maze level by level to find the shortest path from the
+        entry point to the exit point, ensuring an optimal solution in an
         unweighted grid.
 
         Returns:
-            list[tuple[tuple[int, int], str]]: A list of steps representing the 
-                path from start to finish. Each step is a tuple containing the 
-                (x, y) coordinates of the cell and the direction taken to move 
+            list[tuple[tuple[int, int], str]]: A list of steps representing the
+                path from start to finish. Each step is a tuple containing the
+                (x, y) coordinates of the cell and the direction taken to move
                 to the next one.
 
         Raises:
-            MazeGenerationError: If the exit point is unreachable from the entry point.
+            MazeGenerationError: If the exit point is unreachable
+            from the entry point.
         """
 
         explored: deque[tuple[int, int]] = deque([self.entry_xy])
@@ -224,28 +168,6 @@ class MazeGenerator:
 
         return solve_list
 
-    def hex_maze(self) -> list[str]:
-        """ Return hex representation of maze """
-        hex_str = "0123456789ABCDEF"
-        hex_maze = []
-        line = ""
-        for y in range(self.height):
-            line = ""
-            for x in range(self.width):
-                cell = self.grid[x][y]
-                value = 0
-                if cell.walls['N']:
-                    value += 1
-                if cell.walls['E']:
-                    value += 2
-                if cell.walls['S']:
-                    value += 4
-                if cell.walls['W']:
-                    value += 8
-                line += hex_str[value]
-            hex_maze.append(line)
-        return hex_maze
-
     def save_to_file(self, filename: str) -> None:
         """ Saves hex representation of maze and solution in filename.txt """
         file = filename
@@ -269,6 +191,240 @@ class MazeGenerator:
                     f.write(d)
         except OSError as e:
             print(f"Caught an error generating '{filename}.txt' file: {e}")
+
+    # --- PRIVATE GENERATION LOGICS ---
+    def _generate_logic(self) -> None:
+        """
+        Generate the maze structure using a randomized wall-removal algorithm.
+
+        This internal method initializes the grid walls, optionally applies the
+        '42' pattern as a mask, and create a spanning tree of connected cells.
+        """
+        if self.width >= 15 and self.height >= 15:
+            pattern_42 = self.block_42_pattern(self.width, self.height)
+        else:
+            pattern_42 = None
+        active_pattern = set(pattern_42) if pattern_42 is not None else set()
+        walls = []
+        for x in range(self.width):
+            for y in range(self.height):
+                # if the cell is in 42 pattern
+                if pattern_42 is not None:
+                    if (x, y) in pattern_42:
+                        continue
+                if x < self.width - 1:
+                    walls.append((self.grid[x][y], self.grid[x+1][y]))
+                if y < self.height - 1:
+                    walls.append((self.grid[x][y], self.grid[x][y+1]))
+
+        if self.seed is not None:
+            random.seed(self.seed)
+        random.shuffle(walls)
+
+        for c1, c2 in walls:
+            p_42 = False
+            if (c1.x, c1.y) in active_pattern:
+                p_42 = True
+            elif (c2.x, c2.y) in active_pattern:
+                p_42 = True
+            if not p_42:
+                if c1.find() != c2.find():
+                    self._remove_wall(c1, c2)
+                    c1.union(c2)
+
+    def _add_cycles(self) -> None:
+        """
+        Injects cycles into the maze structure by strategically removing walls.
+
+        This method identifies intact walls that are not part of a protected
+        pattern, shuffles them to ensure randomness, and removes them if the
+        action does not create an undesirable 3x3 open area.
+
+        The process follows a "try-and-restore" logic to maintain structural
+        constraints while increasing maze connectivity.
+        """
+        pattern_42 = self.block_42_pattern(self.width, self.height)
+        intact_walls: list[tuple[Cell, Cell, str, str]] = []
+
+        for x in range(self.width):
+            for y in range(self.height):
+                c1 = self.grid[x][y]
+                if (c1.x, c1.y) in pattern_42:
+                    continue
+
+                # Checking east-neighbor
+                if x < self.width - 1 and c1.walls['E']:
+                    c2 = self.grid[x+1][y]
+                    if (c2.x, c2.y) not in pattern_42:
+                        intact_walls.append((c1, c2, 'E', 'W'))
+
+                # Checking south-neighbor
+                if y < self.height - 1 and c1.walls['S']:
+                    c2 = self.grid[x][y+1]
+                    if (c2.x, c2.y) not in pattern_42:
+                        intact_walls.append((c1, c2, 'S', 'N'))
+
+        # Avoiding localized cycles
+        random.shuffle(intact_walls)
+
+        # Breaking walls simulations
+        for (c1, c2, wall1, wall2) in intact_walls:
+            if random.random() > 0.1:
+                continue
+            c1.walls[wall1] = False
+            c2.walls[wall2] = False
+
+            creates_3x3: bool = False
+
+            # Defines possible 3x3 blocks origins from reference cells
+            for (sx, sy) in self._fetch_3x3_origin(c1, c2):
+                if self._is_3x3_open(sx, sy):
+                    creates_3x3 = True
+                    break
+
+            # If it fail, walls are restored
+            if creates_3x3:
+                c1.walls[wall1] = True
+                c2.walls[wall2] = True
+
+    # --- UTILITIES/HELPERS ---
+    def hex_maze(self) -> list[str]:
+        """ Return hex representation of maze """
+        hex_str = "0123456789ABCDEF"
+        hex_maze = []
+        line = ""
+        for y in range(self.height):
+            line = ""
+            for x in range(self.width):
+                cell = self.grid[x][y]
+                value = 0
+                if cell.walls['N']:
+                    value += 1
+                if cell.walls['E']:
+                    value += 2
+                if cell.walls['S']:
+                    value += 4
+                if cell.walls['W']:
+                    value += 8
+                line += hex_str[value]
+            hex_maze.append(line)
+        return hex_maze
+
+    @staticmethod
+    def block_42_pattern(width: int, height: int) -> set[tuple[int, int]]:
+        """
+        Returns the cells that forms the 42 pattern
+        """
+        pattern = [
+            [1, 0, 0, 0, 1, 1, 0],
+            [1, 0, 1, 0, 0, 0, 1],
+            [1, 1, 1, 0, 0, 1, 0],
+            [0, 0, 1, 0, 1, 0, 0],
+            [0, 0, 1, 0, 1, 1, 1]
+        ]
+        ox = (width - 7) // 2
+        oy = (height - 5) // 2
+
+        cells_to_block: set[tuple[int, int]] = set()
+        for r in range(5):
+            for c in range(7):
+                if pattern[r][c] == 1:
+                    cells_to_block.add((ox + c, oy + r))
+        return cells_to_block
+
+    def _remove_wall(self, c1: Cell, c2: Cell) -> None:
+        """
+        checks position of two cells and removes walls inbetween
+
+        Args:
+        c1, c2 (cell): two cells that are neighbors
+        """
+        # c1 right c2 left
+        if c2.x == c1.x + 1:
+            c1.walls["E"] = False
+            c2.walls["W"] = False
+        # c2 right c1 left
+        elif c2.x == c1.x - 1:
+            c1.walls["W"] = False
+            c2.walls["E"] = False
+        # c1 up c2 under
+        elif c2.y == c1.y + 1:
+            c1.walls["S"] = False
+            c2.walls["N"] = False
+        # c2 up c1 under
+        elif c2.y == c1.y - 1:
+            c1.walls["N"] = False
+            c2.walls["S"] = False
+
+    def _is_3x3_open(self, sx: int, sy: int) -> bool:
+        """
+        Checks if a 3x3 area starting at the given coordinates
+        is completely open.
+
+        This method scans all internal vertical and horizontal walls within a
+        3x3 grid block. If no walls are present, the area is considered "open".
+
+        Args:
+            sx: The starting x-coordinate (top-left) of the 3x3 area.
+            sy: The starting y-coordinate (top-left) of the 3x3 area.
+
+        Returns:
+            True if all internal walls within the 3x3 block are removed,
+            False otherwise.
+        """
+        # Checking on vertical walls
+        for x in range(sx, sx + 2):
+            for y in range(sy, sy + 3):
+                if self.grid[x][y].walls['E']:
+                    return False
+
+        # Checking on horizontal walls
+        for x in range(sx, sx + 3):
+            for y in range(sy, sy + 2):
+                if self.grid[x][y].walls['S']:
+                    return False
+        # At this point its a full open 3x3 block
+        return True
+
+    def _fetch_3x3_origin(
+            self,
+            c1: Cell,
+            c2: Cell
+            ) -> Iterator[tuple[int, int]]:
+        """
+        Identifies potential top-left origins of 3x3 areas
+        affected by a wall removal.
+
+        When a wall between two cells is removed, it could complete several
+        possible 3x3 open blocks. This method calculates the coordinates of the
+        top-left corner for all such blocks that stay within
+        the maze boundaries.
+
+        Args:
+            c1: The first cell involved in the wall removal.
+            c2: The second cell involved in the wall removal.
+
+        Yields:
+            Tuples of (x, y) coordinates representing valid 3x3 block origins.
+        """
+        # For vertical walls
+        if c1.x != c2.x:
+            min_x = min(c1.x, c2.x)
+            range_x: tuple[int, ...] = (min_x - 1, min_x)
+            range_y: tuple[int, ...] = (c1.y - 2, c1.y - 1, c1.y)
+
+        # For horizontal walls
+        else:
+            min_y = min(c1.y, c2.y)
+            range_x = (c1.x - 2, c1.x - 1, c1.x)
+            range_y = (min_y - 1, min_y)
+
+        # Filtering blocks that fit into the maze
+        for sx in range_x:
+            for sy in range_y:
+                # Bounds cheking
+                if 0 <= sx <= self.width - 3 and 0 <= sy <= self.height - 3:
+                    yield sx, sy
 
     def get_maze_grid(self) -> list[list[int]]:
         """
