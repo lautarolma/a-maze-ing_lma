@@ -5,7 +5,7 @@ from config import MazeConfigError
 from ui import DisplayMazeError
 
 
-def main():
+def main() -> None:
     """Main function to run the maze generation and visualization."""
     if len(sys.argv) != 2:
         print("Usage: python3 a_maze_ing.py <config_file>")
