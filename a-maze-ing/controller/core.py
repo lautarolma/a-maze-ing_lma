@@ -29,7 +29,9 @@ def setup_config(file_path: str) -> ConfigFormat:
     return config
 
 
-def build_maze(config) -> tuple[Maze, list[tuple[int, int]] | None]:
+def build_maze(
+    config: ConfigFormat
+) -> tuple[Maze, set[tuple[int, int]] | None]:
     """Generates the maze and applies the '42' pattern if applicable.
     returns the maze object and the pattern cells if the pattern is applied.
     Args:
@@ -58,7 +60,11 @@ def build_maze(config) -> tuple[Maze, list[tuple[int, int]] | None]:
     return maze, pattern
 
 
-def run_visuals(maze, pattern, config) -> None:
+def run_visuals(
+        maze: Maze,
+        pattern: set[tuple[int, int]] | None,
+        config: ConfigFormat
+        ) -> None:
     """Handles the display of the maze and the user interaction loop
     for regenerating the maze, toggling the solution animation,
     changing color themes, and quitting the program.
@@ -76,18 +82,20 @@ def run_visuals(maze, pattern, config) -> None:
             If there is an error during the display
             of the maze or the solution animation."""
 
-    print("\033[H\033[J\033[3J", end="")
+    try:
+        print("\033[H\033[J\033[3J", end="")
+        header_animation()
+    except DisplayMazeError as e:
+        print(f"\nDisplayMazeError: {e}", file=sys.stderr)
+        return
+
     running = True
     show_solution = False
-    header_animation()
 
     while running:
-
-        print("\033[H\033[2J\033[3J", end="", flush=True)
-
-        static_header()
-
         try:
+            print("\033[H\033[2J\033[3J", end="", flush=True)
+            static_header()
             display_maze(
                 maze,
                 pattern,
@@ -97,7 +105,7 @@ def run_visuals(maze, pattern, config) -> None:
             )
 
         except DisplayMazeError as e:
-            print(f"\nDisplayMazeError: {e}")
+            print(f"\nDisplayMazeError: {e}", file=sys.stderr)
             return
 
         if show_solution:
@@ -106,11 +114,15 @@ def run_visuals(maze, pattern, config) -> None:
                 animation(maze, maze.solve(), config["theme_idx"])
 
             except DisplayMazeError as e:
-                print(f"\n\nDisplayMazeError: {e}")
-                print("bye!")
+                print(f"\n\nDisplayMazeError: {e}", file=sys.stderr)
+                print("bye!", file=sys.stderr)
                 return
 
-        menu_visuals(config["theme_idx"])
+        try:
+            menu_visuals(config["theme_idx"])
+        except DisplayMazeError as e:
+            print(f"\nDisplayMazeError: {e}", file=sys.stderr)
+            return
 
         try:
 

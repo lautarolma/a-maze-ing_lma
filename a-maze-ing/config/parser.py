@@ -45,7 +45,6 @@ class ConfigFormat(TypedDict):
     output_file: str
     perfect: bool
     seed: int | None
-    seed: int | None
     theme_idx: int
     random_color: bool
 

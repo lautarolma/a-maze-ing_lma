@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import sys
 from .parser import ConfigFormat, MazeConfigError, ImposibleMazeError
 
 
@@ -44,7 +45,8 @@ def check_42_pattern(config: ConfigFormat) -> bool:
     patttern_42 = True
     if width < 15 or height < 15:
         print("Warning: Maze dimensions are too small to accommodate "
-              "the '42' pattern. The pattern will be ignored.")
+              "the '42' pattern. The pattern will be ignored.",
+              file=sys.stderr)
         patttern_42 = False
     if patttern_42:
         cells_to_block = block_42_pattern(width, height)

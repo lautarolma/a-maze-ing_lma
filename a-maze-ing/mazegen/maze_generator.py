@@ -1,6 +1,8 @@
 import random
+import sys
 from collections import deque
 from collections.abc import Iterator
+
 
 class MazeGenerationError(Exception):
     """Custom exception for maze generation errors."""
@@ -15,16 +17,16 @@ class Cell:
         self.parent = self
         self.walls = {"N": True, "S": True, "E": True, "W": True}
 
-    def find(self):
+    def find(self) -> "Cell":
         """find the cell's origin"""
         if self.parent != self:
             self.parent = self.parent.find()
         return self.parent
 
-    def union(self, other):
+    def union(self, other: "Cell") -> None:
         """
         Merges the set of this cell with the set of the other cell.
-    
+
         Args:
         other (Cell): The neighboring cell with which the merge is performed.
         """
@@ -77,41 +79,50 @@ class MazeGenerator:
                      for x in range(self.width)]
 
     # --- PUBLIC APIS ---
-    def generate(self):
+    def generate(self) -> None:
         """
         generates the maze using randomized Kruskal's algorithm
         """
         self._generate_logic()
         if not self.perfect:
-           self._add_cycles()
-           
-
+            self._add_cycles()
 
     # Solve Maze using BFS
-    def solve(self) -> list[tuple[Cell, str]]:
+
+    def solve(self) -> list[tuple[tuple[int, int], str]]:
         explored: deque[tuple[int, int]] = deque([self.entry_xy])
-        origin: dict[tuple[int, int], tuple[tuple[int, int], str] | None] = {self.entry_xy: None}
+        origin: dict[
+            tuple[int, int],
+            tuple[tuple[int, int], str] | None
+            ] = {self.entry_xy: None}
         while explored:
             cx, cy = explored.popleft()
             if (cx, cy) == self.exit_xy:
                 break
             # BFS, checks all posible directions
             for d, (dx, dy) in self.DIR_DELTA.items():
-                nx, ny = cx + dx, cy + dy # moves to first direction (N,S,W,E)
-                if (0 <= nx < self.width # if is on w limit
-                    and 0 <= ny < self.height # if is on h limit
-                    and (nx, ny) not in origin # if the cell have not been explored
-                    and not self.grid[cx][cy].walls[d]): # if the wall (ex N) is False
-                    origin[(nx, ny)] = ((cx, cy), d) # saves the cell, origin and 'move'
-                    explored.append((nx, ny)) # save in explored cells
+                nx, ny = cx + dx, cy + dy
+                # moves to first direction (N,S,W,E).
+                if (
+                    0 <= nx < self.width
+                    and 0 <= ny < self.height
+                    and (nx, ny) not in origin
+                    and not self.grid[cx][cy].walls[d]
+                ):  # if is on w limits, h limits,
+                    # cell have not been explored and the wall is False
+                    origin[(nx, ny)] = ((cx, cy), d)
+                    # saves the cell, origin and 'move'.
+                    explored.append((nx, ny))  # save in explored cells.
 
         if self.exit_xy not in origin:
-            raise MazeConfigError("Exit not found")
+            raise MazeGenerationError("Exit not found")
 
-        solve_list: list[tuple[Cell, str]] = []
+        solve_list: list[tuple[tuple[int, int], str]] = []
         pos = self.exit_xy
         while origin[pos] is not None:
             info = origin[pos]
+            if info is None:
+                break
             pos = info[0]
             add = pos, info[1]
             solve_list.append(add)
@@ -143,10 +154,11 @@ class MazeGenerator:
                 for d in direction_list:
                     f.write(d)
         except OSError as e:
-            print(f"Caught an error generating 'maze.txt' file: {e}")
-    
+            print(f"Caught an error generating 'maze.txt' file: {e}",
+                  file=sys.stderr)
+
     # --- PRIVATE GENERATION LOGICS ---
-    def _generate_logic(self):
+    def _generate_logic(self) -> None:
         pattern_42 = self.block_42_pattern(self.width, self.height)
         walls = []
         for x in range(self.width):
@@ -178,30 +190,32 @@ class MazeGenerator:
         """Injection of cycles to the maze structure"""
         pattern_42 = self.block_42_pattern(self.width, self.height)
         intact_walls: list[tuple[Cell, Cell, str, str]] = []
-        
+
         for x in range(self.width):
             for y in range(self.height):
                 c1 = self.grid[x][y]
                 if (c1.x, c1.y) in pattern_42:
                     continue
 
-                #Checking east-neighbor 
+                # Checking east-neighbor
                 if x < self.width - 1 and c1.walls['E']:
                     c2 = self.grid[x+1][y]
                     if (c2.x, c2.y) not in pattern_42:
                         intact_walls.append((c1, c2, 'E', 'W'))
 
-                #Checking south-neighbor
+                # Checking south-neighbor
                 if y < self.height - 1 and c1.walls['S']:
                     c2 = self.grid[x][y+1]
                     if (c2.x, c2.y) not in pattern_42:
                         intact_walls.append((c1, c2, 'S', 'N'))
-            
-        # Avoiding localized cycles.        
+
+        # Avoiding localized cycles.
         random.shuffle(intact_walls)
 
         # Breaking walls simulations
         for (c1, c2, wall1, wall2) in intact_walls:
+            if random.random() > 0.2:
+                continue
             c1.walls[wall1] = False
             c2.walls[wall2] = False
 
@@ -263,7 +277,7 @@ class MazeGenerator:
                     cells_to_block.add((ox + c, oy + r))
         return cells_to_block
 
-    def _remove_wall(self, c1: Cell, c2: Cell):
+    def _remove_wall(self, c1: Cell, c2: Cell) -> None:
         """
         checks position of two cells and removes walls inbetween
 
@@ -287,46 +301,45 @@ class MazeGenerator:
             c1.walls["N"] = False
             c2.walls["S"] = False
 
-    def _is_3x3_open(self, sx, sy) -> bool:
+    def _is_3x3_open(self, sx: int, sy: int) -> bool:
         "Validates area looking for 3x3 open areas"
-        #Checking on vertical walls
+# Checking on vertical walls
         for x in range(sx, sx + 2):
             for y in range(sy, sy + 3):
                 if self.grid[x][y].walls['E']:
                     return False
 
-        #Checking on horizontal walls
+# Checking on horizontal walls
         for x in range(sx, sx + 3):
             for y in range(sy, sy + 2):
                 if self.grid[x][y].walls['S']:
                     return False
-        # At this point its a full open 3x3 block
+# At this point its a full open 3x3 block
         return True
 
- 
-    
     def _fetch_3x3_origin(
         self,
         c1: Cell,
         c2: Cell
-        ) -> Iterator[tuple[int, int]]:
+    ) -> Iterator[tuple[int, int]]:
         "Returns the posibles rooth cell/origins of the 3x3 area creations"
-        #For vertical walls
+# For vertical walls
+        range_x: list[int]
+        range_y: list[int]
         if c1.x != c2.x:
             min_x = min(c1.x, c2.x)
-            range_x = (min_x - 1, min_x)
-            range_y = (c1.y - 2, c1.y - 1, c1.y)
-        
-        #For horizontal walls
+            range_x = [min_x - 1, min_x]
+            range_y = [c1.y - 2, c1.y - 1, c1.y]
+
+# For horizontal walls
         else:
             min_y = min(c1.y, c2.y)
-            range_x = (c1.x - 2, c1.x - 1, c1.x)
-            range_y = (min_y - 1, min_y)
+            range_x = [c1.x - 2, c1.x - 1, c1.x]
+            range_y = [min_y - 1, min_y]
 
-        #Filtering blocks that fit into the maze
+# Filtering blocks that fit into the maze
         for sx in range_x:
             for sy in range_y:
-                #Bounds cheking
+                # Bounds cheking
                 if 0 <= sx <= self.width - 3 and 0 <= sy <= self.height - 3:
                     yield sx, sy
-            

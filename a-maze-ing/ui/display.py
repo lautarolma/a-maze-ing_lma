@@ -1,5 +1,6 @@
 import os
 import random
+import sys
 from typing import Generator
 import time
 from mazegen import MazeGenerator as Maze
@@ -59,8 +60,8 @@ class DisplayMazeError(Exception):
 
 def print_maze(
         maze: Maze,
-        pattern_42: set[tuple[int, int]],
-        solution_path: list[tuple[int, int]] | None = None,
+        pattern_42: set[tuple[int, int]] | None,
+        solution_path: list[tuple[tuple[int, int], str]] | None = None,
         # maze_fits: bool = False, ya no es necesario,
         # se determina desde run_visuals()
         # show_solution: bool = False, ya no es necesario,
@@ -96,66 +97,40 @@ def print_maze(
     ec = COLOR_PALETTE[theme_idx][4]
 
     r_style = bg + font
-
-    # sol_set: set[tuple[int, int]] = (
-    #     set(solution_path) if solution_path else set[tuple[int, int]]()
-    # )
-
     top_line = r_style
-    # solved_path = [coord for coord, _ in sol_set]
-
     for x in range(maze.width):
         top_line += "+---"
     top_line += "+" + ec
     print(top_line)
 
-    # for each row of the maze
     for y in range(maze.height):
-
-        # vertical cells
         line_cells = r_style + "|"
-
-        # bottom line of cells
         line_bottom = r_style
 
         for x in range(maze.width):
             cell = maze.grid[x][y]
-
-            # check if the cell is entry, exit, in 42 pattern or normal cell
             if (x, y) == maze.entry_xy or (x, y) == maze.exit_xy:
                 content = path + " * " + ec + r_style
             elif (pattern_42 and (x, y) in pattern_42):
                 content = ft + " * " + ec + r_style
-            # mostrar solución instantaneamente ya no es necesario,
-            # debe activarse desde menú
-            # elif (x, y) in solved_path and not maze_fits and show_solution:
-            #     # render solution path
-            #     content = path + " • " + ec + r_style
             else:
                 content = "   "
 
-            # East wall
             east_wall = "|" if cell.walls["E"] else " "
-
-            # build line of cells
             line_cells += content + east_wall
 
-            # South wall
             if cell.walls["S"]:
                 line_bottom += "+---"
             else:
                 line_bottom += "+   "
 
-        # Close the line of cells
         line_cells += ec
         line_bottom += "+" + ec
-
-        # Print the two lines
         print(line_cells)
         print(line_bottom)
 
 
-def header_yield(file_path: str) -> Generator[dict, None, None]:
+def header_yield(file_path: str) -> Generator[str, None, None]:
     """
     Reads a file and yields its content character by character with a delay.
         Args:
@@ -171,7 +146,7 @@ def header_yield(file_path: str) -> Generator[dict, None, None]:
                     yield c
 
     except FileNotFoundError as e:
-        print(f"Caught an error: {e}")
+        print(f"Caught an error: {e}", file=sys.stderr)
 
 
 def header_animation() -> None:
@@ -189,7 +164,7 @@ def header_animation() -> None:
             print("\033[s", end="")
 
     except FileNotFoundError as e:
-        print(f"Caught an error: {e}")
+        print(f"Caught an error: {e}", file=sys.stderr)
 
 
 def static_header() -> None:
@@ -204,7 +179,7 @@ def static_header() -> None:
             print(f.read(), end="", flush=True)
 
     except FileNotFoundError as e:
-        print(f"Caught an error: {e}")
+        print(f"Caught an error: {e}", file=sys.stderr)
 
 
 # For print over terminal output, we must use
@@ -215,7 +190,11 @@ def static_header() -> None:
 # {value} + 'A' moves the terminal-cursor to up direction n_value times.
 # {value} + 'C' moves the terminal-cursor to right direction n_value times.
 
-def animation(maze, solution_path: list, theme_idx: int = 4) -> None:
+def animation(
+        maze: Maze,
+        solution_path: list[tuple[tuple[int, int], str]],
+        theme_idx: int = 4
+        ) -> None:
     """
     prints step by step the solution path with a delay between each step.
         Args:
@@ -231,36 +210,25 @@ def animation(maze, solution_path: list, theme_idx: int = 4) -> None:
     """
     sol_color = COLOR_PALETTE[theme_idx][1]
     ec = COLOR_PALETTE[theme_idx][4]
-    # revisa tamaño del terminal al inicio de la animación
     initial_size = shutil.get_terminal_size()
-    # Guarda la posicion actual del cursor
     solution_coords = [coords for coords, _ in solution_path]
     print("\033[s", end="")
     for x, y in solution_coords:
-        # revisa el tamaño de la terminal en cada iteración,
-        # si cambia o es menor al tamaño inicial, termina la animación
-        # para evitar errores de impresión
         current_size = shutil.get_terminal_size()
         if current_size != initial_size:
-            # Regresa al final
             print("\033[u", end="", flush=True)
             raise DisplayMazeError(
-                "Terminal resized during animation. Returning to safe state.")
-        # Reestablece el cursor al checkpoint
+                "Terminal resized during animation. Returning to safe state."
+            )
         print("\033[u", end="")
-
-        # Calcula el eje Y vertical y el eje X horizontal
         lines_up = 2 * (maze.height - y)
         cols_right = x * 4 + 2
 
         move_up = f"\033[{lines_up}A"
         move_right = f"\033[{cols_right}C" if cols_right > 0 else ""
-
-        # Mueve e imprime sin salto de linea y forzando el flush(necesario)
         print(f"{move_up}{move_right}{sol_color}•{ec}", end="", flush=True)
         time.sleep(0.05)
 
-    # Devuelve el cursor al punto de partida(posicion final de la impresion)
     print("\033[u", end="", flush=True)
 
 
@@ -305,7 +273,6 @@ def menu_visuals(theme_idx: int) -> None:
     ft = COLOR_PALETTE[theme_idx][3]
     font = COLOR_PALETTE[theme_idx][2]
     ec = COLOR_PALETTE[theme_idx][4]
-
     style = f"{bg}{font}"
 
     print(f"{ft} {font} \nLau&Lau Maze menu: {ec}")
@@ -317,8 +284,8 @@ def menu_visuals(theme_idx: int) -> None:
 
 def display_maze(
         maze: Maze,
-        pattern_42: set[tuple[int, int]],
-        solution_path: list[tuple[int, int]] | None = None,
+        pattern_42: set[tuple[int, int]] | None,
+        solution_path: list[tuple[tuple[int, int], str]] | None = None,
         # maze_fits: bool = False, se determina desde run_visuals()
         # instant_solution: bool = False, no es necesario,
         # se determina con el menú
@@ -349,8 +316,6 @@ def display_maze(
         maze,
         pattern_42,
         solution_path,
-        # maze_fits,
-        # instant_solution,
         theme_idx,
         random_color
         )

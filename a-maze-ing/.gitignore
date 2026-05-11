@@ -18,3 +18,8 @@ maze-prueba/
 .venv/
 
 maze.txt
+*.swp
+*.swo
+*.swn
+My_notes.md
+
