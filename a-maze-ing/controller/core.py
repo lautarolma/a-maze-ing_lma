@@ -82,18 +82,20 @@ def run_visuals(
             If there is an error during the display
             of the maze or the solution animation."""
 
-    print("\033[H\033[J\033[3J", end="")
+    try:
+        print("\033[H\033[J\033[3J", end="")
+        header_animation()
+    except DisplayMazeError as e:
+        print(f"\nDisplayMazeError: {e}", file=sys.stderr)
+        return
+
     running = True
     show_solution = False
-    header_animation()
 
     while running:
-
-        print("\033[H\033[2J\033[3J", end="", flush=True)
-
-        static_header()
-
         try:
+            print("\033[H\033[2J\033[3J", end="", flush=True)
+            static_header()
             display_maze(
                 maze,
                 pattern,
@@ -103,7 +105,7 @@ def run_visuals(
             )
 
         except DisplayMazeError as e:
-            print(f"\nDisplayMazeError: {e}")
+            print(f"\nDisplayMazeError: {e}", file=sys.stderr)
             return
 
         if show_solution:
@@ -112,11 +114,15 @@ def run_visuals(
                 animation(maze, maze.solve(), config["theme_idx"])
 
             except DisplayMazeError as e:
-                print(f"\n\nDisplayMazeError: {e}")
-                print("bye!")
+                print(f"\n\nDisplayMazeError: {e}", file=sys.stderr)
+                print("bye!", file=sys.stderr)
                 return
 
-        menu_visuals(config["theme_idx"])
+        try:
+            menu_visuals(config["theme_idx"])
+        except DisplayMazeError as e:
+            print(f"\nDisplayMazeError: {e}", file=sys.stderr)
+            return
 
         try:
 
