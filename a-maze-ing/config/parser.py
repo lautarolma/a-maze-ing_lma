@@ -60,9 +60,9 @@ def parse_coord(value: str) -> tuple[int, int]:
         x = int(coor[0])
         y = int(coor[1])
         return (x, y)
-    except ValueError:
+    except ValueError as e:
         raise MazeConfigError(f"Invalid coordinate value: '{value}' "
-                              "(Expected x,y with integers)") from None
+                              f"(Expected x,y with integers)")
 
 
 def parse_config(config_file_path: str) -> ConfigFormat:

@@ -24,7 +24,7 @@ def main() -> None:
     except DisplayMazeError as e:
         print(f"DisplayMazeError Error: {e}", file=sys.stderr)
     except Exception as e:
-        print(f"Unexpected Error: {e}", file=sys.stderr)
+    #    print(f"Unexpected Error: {e}", file=sys.stderr)
 
 
 if __name__ == "__main__":
